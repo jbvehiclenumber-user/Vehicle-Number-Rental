@@ -1,0 +1,109 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 회사 정보
+model Company {
+  id                String    @id @default(uuid())
+  businessNumber    String    @unique @map("business_number") // 사업자등록번호
+  companyName       String    @map("company_name")
+  representative    String
+  address           String
+  contactPerson     String    @map("contact_person")
+  phone             String
+  email             String?
+  password          String    // 해시된 비밀번호
+  verified          Boolean   @default(false)
+  verifiedAt        DateTime? @map("verified_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // 관계
+  vehicles          Vehicle[]
+  
+  @@map("companies")
+}
+
+// 개인(기사) 정보
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  phone         String    @unique
+  password      String    // 해시된 비밀번호
+  verified      Boolean   @default(false)
+  verifiedAt    DateTime? @map("verified_at")
+  lastLogin     DateTime? @map("last_login")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // 관계
+  payments      Payment[]
+  
+  @@map("users")
+}
+
+// 차량 번호 정보
+model Vehicle {
+  id              String    @id @default(uuid())
+  companyId       String    @map("company_id")
+  vehicleNumber   String    @map("vehicle_number")
+  vehicleType     String    @map("vehicle_type") // 택시, 화물차 등
+  tonnage         String?   // 톤수
+  yearModel       Int?      @map("year_model")
+  region          String    // 지역
+  insuranceRate   Int       @map("insurance_rate") // 보험료 (%)
+  monthlyFee      Int       @map("monthly_fee") // 월 지입료
+  description     String?   // 추가 설명
+  isAvailable     Boolean   @default(true) @map("is_available")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // 관계
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  
+  @@map("vehicles")
+  @@index([region])
+  @@index([vehicleType])
+  @@index([isAvailable])
+}
+
+// 결제 및 조회 이력
+model Payment {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  vehicleId       String    @map("vehicle_id")
+  amount          Int       // 결제 금액
+  paymentMethod   String?   @map("payment_method") // 결제 수단
+  paymentKey      String?   @unique @map("payment_key") // 토스페이먼츠 키
+  status          String    @default("pending") // pending, completed, failed
+  paidAt          DateTime? @map("paid_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // 관계
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+  @@index([userId])
+  @@index([vehicleId])
+}
+
+// 관리자 (추후 필요시)
+model Admin {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String
+  email       String   @unique
+  role        String   @default("admin")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@map("admins")
+}

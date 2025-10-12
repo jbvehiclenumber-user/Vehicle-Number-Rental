@@ -1,0 +1,232 @@
+// src/pages/DriverDashboard.tsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { vehicleService } from "../services/vehicleService";
+import { Vehicle, VehicleFilter } from "../types/vehicle";
+
+const DriverDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user, logout } = useAuthStore();
+
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<VehicleFilter>({
+    region: searchParams.get("region") || undefined,
+  });
+
+  const regions = ["서울", "경기", "강원", "충청", "전라", "경상"];
+  const vehicleTypes = ["택시", "화물차", "버스", "기타"];
+
+  useEffect(() => {
+    loadVehicles();
+  }, [filter]);
+
+  const loadVehicles = async () => {
+    setIsLoading(true);
+    try {
+      const data = await vehicleService.getVehicles(filter);
+      setVehicles(data);
+    } catch (error) {
+      console.error("Failed to load vehicles:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVehicleClick = (vehicleId: string) => {
+    navigate(`/vehicle/${vehicleId}`);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">기사 대시보드</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-gray-600">{user?.name}님</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              >
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">검색 필터</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 지역 필터 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                지역
+              </label>
+              <select
+                value={filter.region || ""}
+                onChange={(e) =>
+                  setFilter({ ...filter, region: e.target.value || undefined })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                <option value="">전체</option>
+                {regions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 차종 필터 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                차종
+              </label>
+              <select
+                value={filter.vehicleType || ""}
+                onChange={(e) =>
+                  setFilter({
+                    ...filter,
+                    vehicleType: e.target.value || undefined,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                <option value="">전체</option>
+                {vehicleTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 지입료 필터 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                최대 지입료
+              </label>
+              <input
+                type="number"
+                value={filter.maxFee || ""}
+                onChange={(e) =>
+                  setFilter({
+                    ...filter,
+                    maxFee: Number(e.target.value) || undefined,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="예: 300000"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => setFilter({})}
+            className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+          >
+            필터 초기화
+          </button>
+        </div>
+
+        {/* Vehicle List */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">
+            등록된 차량 번호 ({vehicles.length}건)
+          </h2>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : vehicles.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <p className="text-gray-500">등록된 차량이 없습니다.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {vehicles.map((vehicle) => (
+                <div
+                  key={vehicle.id}
+                  onClick={() => handleVehicleClick(vehicle.id)}
+                  className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {vehicle.vehicleNumber}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {vehicle.vehicleType}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                      {vehicle.region}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {vehicle.tonnage && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">톤수</span>
+                        <span className="font-medium">{vehicle.tonnage}</span>
+                      </div>
+                    )}
+                    {vehicle.yearModel && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">연식</span>
+                        <span className="font-medium">
+                          {vehicle.yearModel}년
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">보험료</span>
+                      <span className="font-medium">
+                        {vehicle.insuranceRate}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t pt-2">
+                      <span className="text-gray-900 font-semibold">
+                        월 지입료
+                      </span>
+                      <span className="text-blue-600 font-bold">
+                        {vehicle.monthlyFee.toLocaleString()}원
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleVehicleClick(vehicle.id);
+                    }}
+                  >
+                    상세보기 (10,000원)
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DriverDashboard;

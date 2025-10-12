@@ -1,0 +1,252 @@
+// src/pages/VehicleDetailPage.tsx
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { vehicleService } from "../services/vehicleService";
+import { paymentService } from "../services/paymentService";
+import { Vehicle } from "../types/vehicle";
+
+const VehicleDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasPaid, setHasPaid] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      loadVehicle(id);
+      checkPaymentStatus(id);
+    }
+  }, [id]);
+
+  const loadVehicle = async (vehicleId: string) => {
+    setIsLoading(true);
+    try {
+      const data = await vehicleService.getVehicle(vehicleId);
+      setVehicle(data);
+    } catch (error) {
+      console.error("Failed to load vehicle:", error);
+      alert("차량 정보를 불러오는데 실패했습니다.");
+      navigate(-1);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const checkPaymentStatus = async (vehicleId: string) => {
+    try {
+      // 이미 결제한 차량인지 확인
+      const payments = await paymentService.getMyPayments();
+      const paid = payments.some(
+        (p) => p.vehicleId === vehicleId && p.status === "completed"
+      );
+      setHasPaid(paid);
+    } catch (error) {
+      console.error("Failed to check payment:", error);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!vehicle || !id) return;
+
+    setIsProcessing(true);
+
+    try {
+      // 토스페이먼츠 결제 초기화
+      const payment = await paymentService.createPayment({
+        vehicleId: id,
+        amount: 10000,
+      });
+
+      // 토스페이먼츠 SDK 호출 (실제 구현 시)
+      // 여기서는 간단히 완료 처리
+      alert("결제가 완료되었습니다!");
+      setHasPaid(true);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "결제에 실패했습니다.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">차량 정보를 찾을 수 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            ← 뒤로가기
+          </button>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Vehicle Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  {vehicle.vehicleNumber}
+                </h1>
+                <p className="text-blue-100">{vehicle.vehicleType}</p>
+              </div>
+              <span className="px-3 py-1 bg-white text-blue-600 rounded-full text-sm font-semibold">
+                {vehicle.region}
+              </span>
+            </div>
+          </div>
+
+          {/* Vehicle Details */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {vehicle.tonnage && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600">톤수</span>
+                  <span className="font-semibold text-gray-900">
+                    {vehicle.tonnage}
+                  </span>
+                </div>
+              )}
+
+              {vehicle.yearModel && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600">연식</span>
+                  <span className="font-semibold text-gray-900">
+                    {vehicle.yearModel}년
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">보험료</span>
+                <span className="font-semibold text-gray-900">
+                  {vehicle.insuranceRate}%
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <span className="text-gray-700 font-medium">월 지입료</span>
+                <span className="text-2xl font-bold text-blue-600">
+                  {vehicle.monthlyFee.toLocaleString()}원
+                </span>
+              </div>
+            </div>
+
+            {vehicle.description && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">추가 정보</h3>
+                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                  {vehicle.description}
+                </p>
+              </div>
+            )}
+
+            {/* Contact Information (Locked) */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold mb-4">연락처 정보</h3>
+
+              {hasPaid ? (
+                <div className="space-y-3 bg-green-50 p-4 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">회사명</span>
+                    <span className="font-semibold">
+                      {vehicle.company?.companyName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">담당자</span>
+                    <span className="font-semibold">
+                      {vehicle.company?.contactPerson}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">전화번호</span>
+                    <a
+                      href={`tel:${vehicle.company?.phone}`}
+                      className="font-semibold text-blue-600 hover:underline"
+                    >
+                      {vehicle.company?.phone}
+                    </a>
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-gray-600">
+                      💡 위 번호로 직접 연락하여 상담하실 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-100 p-6 rounded-lg text-center">
+                  <div className="mb-4">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-gray-700 mb-4">
+                    연락처 정보를 확인하려면 <strong>10,000원</strong>을
+                    결제해주세요.
+                  </p>
+                  <button
+                    onClick={handlePayment}
+                    disabled={isProcessing}
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50"
+                  >
+                    {isProcessing
+                      ? "처리 중..."
+                      : "10,000원 결제하고 연락처 보기"}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-3">
+                    결제 후 즉시 연락처가 공개됩니다.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Notice */}
+        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항</h4>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            <li>• 직거래 시 반드시 계약서를 작성하세요.</li>
+            <li>• 사업자등록증을 확인하고 거래하세요.</li>
+            <li>• 불법 수수료 요구 시 신고해주세요.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VehicleDetailPage;
