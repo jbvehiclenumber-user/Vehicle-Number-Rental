@@ -28,7 +28,7 @@ const VehicleDetailPage: React.FC = () => {
       setVehicle(data);
     } catch (error) {
       console.error("Failed to load vehicle:", error);
-      alert("차량 정보를 불러오는데 실패했습니다.");
+      window.alert("차량 정보를 불러오는데 실패했습니다.");
       navigate(-1);
     } finally {
       setIsLoading(false);
@@ -62,10 +62,10 @@ const VehicleDetailPage: React.FC = () => {
 
       // 토스페이먼츠 SDK 호출 (실제 구현 시)
       // 여기서는 간단히 완료 처리
-      alert("결제가 완료되었습니다!");
+      window.alert("결제가 완료되었습니다!");
       setHasPaid(true);
     } catch (error: any) {
-      alert(error.response?.data?.message || "결제에 실패했습니다.");
+      window.alert(error.response?.data?.message || "결제에 실패했습니다.");
     } finally {
       setIsProcessing(false);
     }

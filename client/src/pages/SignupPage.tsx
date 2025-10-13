@@ -37,7 +37,7 @@ const SignupPage: React.FC = () => {
 
   const handleVerifyBusiness = async () => {
     if (!companyData.businessNumber) {
-      alert("사업자등록번호를 입력하세요.");
+      window.alert("사업자등록번호를 입력하세요.");
       return;
     }
 
@@ -47,12 +47,12 @@ const SignupPage: React.FC = () => {
       );
       if (isValid) {
         setBusinessVerified(true);
-        alert("사업자등록번호 인증이 완료되었습니다.");
+        window.alert("사업자등록번호 인증이 완료되었습니다.");
       } else {
-        alert("유효하지 않은 사업자등록번호입니다.");
+        window.alert("유효하지 않은 사업자등록번호입니다.");
       }
     } catch (err) {
-      alert("사업자등록번호 인증에 실패했습니다.");
+      window.alert("사업자등록번호 인증에 실패했습니다.");
     }
   };
 

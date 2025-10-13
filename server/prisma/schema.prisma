@@ -54,14 +54,15 @@ model Vehicle {
   id              String    @id @default(uuid())
   companyId       String    @map("company_id")
   vehicleNumber   String    @map("vehicle_number")
-  vehicleType     String    @map("vehicle_type") // 택시, 화물차 등
-  tonnage         String?   // 톤수
-  yearModel       Int?      @map("year_model")
-  region          String    // 지역
+  vehicleType     String    @map("vehicle_type") // 택시, 화물차, 버스 등
+  tonnage         String?   // 톤수 (1톤, 2.5톤 등)
+  yearModel       Int?      @map("year_model") // 연식
+  region          String    // 지역 (서울, 경기, 인천 등)
   insuranceRate   Int       @map("insurance_rate") // 보험료 (%)
-  monthlyFee      Int       @map("monthly_fee") // 월 지입료
+  monthlyFee      Int       @map("monthly_fee") // 월 지입료 (원)
   description     String?   // 추가 설명
   isAvailable     Boolean   @default(true) @map("is_available")
+  viewCount       Int       @default(0) @map("view_count") // 조회수
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -73,6 +74,8 @@ model Vehicle {
   @@index([region])
   @@index([vehicleType])
   @@index([isAvailable])
+  @@index([monthlyFee])
+  @@index([yearModel])
 }
 
 // 결제 및 조회 이력
@@ -80,11 +83,13 @@ model Payment {
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
   vehicleId       String    @map("vehicle_id")
-  amount          Int       // 결제 금액
-  paymentMethod   String?   @map("payment_method") // 결제 수단
+  amount          Int       @default(10000) // 고정 결제 금액 (1만원)
+  paymentMethod   String?   @map("payment_method") // 결제 수단 (card, bank_transfer 등)
   paymentKey      String?   @unique @map("payment_key") // 토스페이먼츠 키
-  status          String    @default("pending") // pending, completed, failed
+  orderId         String?   @unique @map("order_id") // 주문 ID
+  status          String    @default("pending") // pending, completed, failed, cancelled
   paidAt          DateTime? @map("paid_at")
+  cancelledAt     DateTime? @map("cancelled_at")
   createdAt       DateTime  @default(now()) @map("created_at")
 
   // 관계
@@ -94,6 +99,8 @@ model Payment {
   @@map("payments")
   @@index([userId])
   @@index([vehicleId])
+  @@index([status])
+  @@index([paidAt])
 }
 
 // 관리자 (추후 필요시)

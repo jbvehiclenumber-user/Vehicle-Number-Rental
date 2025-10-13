@@ -52,7 +52,7 @@ const DriverDashboard: React.FC = () => {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">기사 대시보드</h1>
             <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user?.name}님</span>
+              <span className="text-gray-600">{(user as any)?.name}님</span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-gray-700 hover:text-gray-900"

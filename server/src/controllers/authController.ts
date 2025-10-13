@@ -214,14 +214,120 @@ export const verifyBusinessNumber = async (req: Request, res: Response) => {
   try {
     const { businessNumber } = req.body;
 
-    // TODO: 실제로는 국세청 API를 호출해야 함
-    // 여기서는 간단히 형식만 검증
-    const isValid = /^\d{3}-\d{2}-\d{5}$/.test(businessNumber);
+    // 사업자등록번호 형식 검증
+    const businessNumberRegex = /^\d{3}-\d{2}-\d{5}$/;
+    if (!businessNumberRegex.test(businessNumber)) {
+      return res.status(400).json({
+        valid: false,
+        message: "올바른 사업자등록번호 형식이 아닙니다. (예: 123-45-67890)",
+      });
+    }
 
-    res.json({ valid: isValid });
+    // TODO: 실제로는 국세청 API를 호출해야 함
+    // 여기서는 시뮬레이션으로 처리
+    // 실제 구현 시에는 국세청 사업자등록번호 진위확인 서비스 API 사용
+
+    // 시뮬레이션: 일부 번호는 유효하지 않다고 처리
+    const invalidNumbers = ["000-00-00000", "111-11-11111", "999-99-99999"];
+    const isValid = !invalidNumbers.includes(businessNumber);
+
+    if (isValid) {
+      // 회사 인증 상태 업데이트
+      const company = await prisma.company.findUnique({
+        where: { businessNumber },
+      });
+
+      if (company) {
+        await prisma.company.update({
+          where: { id: company.id },
+          data: {
+            verified: true,
+            verifiedAt: new Date(),
+          },
+        });
+      }
+    }
+
+    res.json({
+      valid: isValid,
+      message: isValid
+        ? "인증이 완료되었습니다."
+        : "유효하지 않은 사업자등록번호입니다.",
+    });
   } catch (error) {
     console.error("Verify business number error:", error);
     res.status(500).json({ message: "인증에 실패했습니다." });
+  }
+};
+
+// 개인 사용자 본인인증 (전화번호 인증)
+export const verifyUser = async (req: Request, res: Response) => {
+  try {
+    const { userId, userType } = (req as any).user;
+    const { phone, verificationCode } = req.body;
+
+    if (userType !== "user") {
+      return res
+        .status(403)
+        .json({ message: "개인 사용자만 인증할 수 있습니다." });
+    }
+
+    // TODO: 실제로는 SMS 인증 API를 호출해야 함
+    // 여기서는 시뮬레이션으로 처리
+    const validCode = "123456"; // 실제로는 랜덤 생성된 코드
+
+    if (verificationCode !== validCode) {
+      return res.status(400).json({
+        valid: false,
+        message: "인증번호가 올바르지 않습니다.",
+      });
+    }
+
+    // 사용자 인증 상태 업데이트
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        verified: true,
+        verifiedAt: new Date(),
+      },
+    });
+
+    res.json({
+      valid: true,
+      message: "본인인증이 완료되었습니다.",
+    });
+  } catch (error) {
+    console.error("Verify user error:", error);
+    res.status(500).json({ message: "인증에 실패했습니다." });
+  }
+};
+
+// 인증번호 발송 (시뮬레이션)
+export const sendVerificationCode = async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.body;
+
+    // TODO: 실제로는 SMS 발송 API를 호출해야 함
+    // 여기서는 시뮬레이션으로 처리
+
+    // 전화번호 형식 검증
+    const phoneRegex = /^01[0-9]-\d{4}-\d{4}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)",
+      });
+    }
+
+    // 시뮬레이션: 인증번호 발송 성공
+    res.json({
+      success: true,
+      message: "인증번호가 발송되었습니다. (시뮬레이션: 123456)",
+      // 실제로는 인증번호를 반환하지 않음
+    });
+  } catch (error) {
+    console.error("Send verification code error:", error);
+    res.status(500).json({ message: "인증번호 발송에 실패했습니다." });
   }
 };
 

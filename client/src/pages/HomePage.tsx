@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
   const handleRegionClick = (region: string) => {
     if (!isAuthenticated) {
       // 로그인 필요 알림
-      alert("로그인이 필요한 서비스입니다.");
+      window.alert("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }

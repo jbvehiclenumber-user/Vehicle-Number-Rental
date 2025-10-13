@@ -39,7 +39,7 @@ const CompanyDashboard: React.FC = () => {
       setVehicles(data);
     } catch (error) {
       console.error("Failed to load vehicles:", error);
-      alert("차량 목록을 불러오는데 실패했습니다.");
+      window.alert("차량 목록을 불러오는데 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -52,18 +52,18 @@ const CompanyDashboard: React.FC = () => {
       if (editingVehicle) {
         // 수정
         await vehicleService.updateVehicle(editingVehicle.id, formData);
-        alert("차량 정보가 수정되었습니다.");
+        window.alert("차량 정보가 수정되었습니다.");
       } else {
         // 등록
         await vehicleService.createVehicle(formData);
-        alert("차량이 등록되었습니다.");
+        window.alert("차량이 등록되었습니다.");
       }
 
       // 폼 초기화 및 목록 새로고침
       resetForm();
       loadMyVehicles();
     } catch (error: any) {
-      alert(error.response?.data?.message || "저장에 실패했습니다.");
+      window.alert(error.response?.data?.message || "저장에 실패했습니다.");
     }
   };
 
@@ -89,10 +89,10 @@ const CompanyDashboard: React.FC = () => {
 
     try {
       await vehicleService.deleteVehicle(vehicleId);
-      alert("차량이 삭제되었습니다.");
+      window.alert("차량이 삭제되었습니다.");
       loadMyVehicles();
     } catch (error) {
-      alert("삭제에 실패했습니다.");
+      window.alert("삭제에 실패했습니다.");
     }
   };
 
@@ -124,7 +124,9 @@ const CompanyDashboard: React.FC = () => {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">회사 대시보드</h1>
             <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user?.companyName}</span>
+              <span className="text-gray-600">
+                {(user as any)?.companyName}
+              </span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-gray-700 hover:text-gray-900"
