@@ -5,7 +5,8 @@ export const vehicleService = {
   // 차량 목록 조회
   getVehicles: async (filter?: VehicleFilter): Promise<Vehicle[]> => {
     const response = await api.get("/vehicles", { params: filter });
-    return response.data;
+    // 서버는 { vehicles: [...], pagination: {...} } 형태로 반환
+    return response.data.vehicles || response.data || [];
   },
 
   // 차량 상세 조회

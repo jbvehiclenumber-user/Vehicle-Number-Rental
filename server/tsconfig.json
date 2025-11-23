@@ -10,8 +10,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "tests/**/*", "prisma/**/*", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

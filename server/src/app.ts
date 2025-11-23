@@ -1,4 +1,5 @@
 // src/app.ts
+/// <reference path="./types/express.d.ts" />
 import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
