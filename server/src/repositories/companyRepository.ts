@@ -20,6 +20,21 @@ export class CompanyRepository {
   }
 
   /**
+   * 전화번호 포맷팅 (하이픈 추가)
+   */
+  private formatPhone(phone: string): string {
+    const numbers = phone.replace(/[^\d]/g, "");
+    if (numbers.length === 11 && numbers.startsWith("010")) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+    } else if (numbers.length === 10 && numbers.startsWith("02")) {
+      return `${numbers.slice(0, 2)}-${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    } else if (numbers.length === 10) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`;
+    }
+    return phone;
+  }
+
+  /**
    * 전화번호로 회사 조회 (하이픈 포함/미포함 모두 지원)
    */
   async findByPhone(phone: string): Promise<Company | null> {
@@ -29,28 +44,25 @@ export class CompanyRepository {
     });
     if (exactMatch) return exactMatch;
 
-    // 하이픈 제거한 버전으로도 시도
-    const normalizedPhone = this.normalizePhone(phone);
-    if (normalizedPhone !== phone) {
-      // 정규화된 전화번호로 검색 (하이픈 포함 형식으로 변환하여 시도)
-      // 01012345678 -> 010-1234-5678 형식으로 변환
-      let formattedPhone = normalizedPhone;
-      if (normalizedPhone.length === 11 && normalizedPhone.startsWith("010")) {
-        formattedPhone = `${normalizedPhone.slice(0, 3)}-${normalizedPhone.slice(3, 7)}-${normalizedPhone.slice(7)}`;
-      } else if (normalizedPhone.length === 10 && normalizedPhone.startsWith("02")) {
-        formattedPhone = `${normalizedPhone.slice(0, 2)}-${normalizedPhone.slice(2, 6)}-${normalizedPhone.slice(6)}`;
-      } else if (normalizedPhone.length === 10) {
-        formattedPhone = `${normalizedPhone.slice(0, 3)}-${normalizedPhone.slice(3, 6)}-${normalizedPhone.slice(6)}`;
-      }
-      
-      if (formattedPhone !== phone) {
-        return prisma.company.findFirst({
-          where: { phone: formattedPhone },
-        });
-      }
+    // 정규화된 전화번호로 비교
+    const normalizedInput = this.normalizePhone(phone);
+    
+    // 하이픈 포함 형식으로 변환하여 시도
+    const formattedPhone = this.formatPhone(normalizedInput);
+    if (formattedPhone !== phone) {
+      const formattedMatch = await prisma.company.findFirst({
+        where: { phone: formattedPhone },
+      });
+      if (formattedMatch) return formattedMatch;
     }
 
-    return null;
+    // 모든 회사를 가져와서 정규화된 전화번호로 비교 (마지막 수단)
+    const allCompanies = await prisma.company.findMany();
+    const matchedCompany = allCompanies.find(
+      (company) => this.normalizePhone(company.phone) === normalizedInput
+    );
+    
+    return matchedCompany || null;
   }
 
   /**
