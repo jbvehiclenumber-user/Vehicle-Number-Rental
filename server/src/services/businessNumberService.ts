@@ -12,7 +12,7 @@ interface VerifiedBusinessNumber {
 const verifiedBusinessNumbers = new Map<string, VerifiedBusinessNumber>();
 
 // 24시간마다 만료된 항목 정리
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = new Date();
   for (const [key, value] of verifiedBusinessNumbers.entries()) {
     const hoursSinceVerification = (now.getTime() - value.verifiedAt.getTime()) / (1000 * 60 * 60);
@@ -21,6 +21,9 @@ setInterval(() => {
     }
   }
 }, 60 * 60 * 1000); // 1시간마다 정리
+
+// 테스트/서버 종료를 막지 않도록 unref
+cleanupInterval.unref();
 
 /**
  * 사업자등록번호 형식 검증

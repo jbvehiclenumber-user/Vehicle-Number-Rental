@@ -8,17 +8,29 @@ describe('Vehicle Rental API Tests', () => {
   let authToken: string;
   let companyId: string;
   let vehicleId: string;
+  let userToken: string;
+  let userId: string;
+  const companyBusinessNumber = '222-33-44444';
+  const companyPhone = '010-5555-2001';
+  const companyEmail = 'test+company@company.com';
+  const userPhone = '010-5555-2002';
+  const userEmail = 'test+user@user.com';
 
   beforeAll(async () => {
+    // 사업자등록번호 인증 시뮬레이션 (회사 회원가입 전 선행)
+    await request(app)
+      .post('/api/auth/verify-business')
+      .send({ businessNumber: companyBusinessNumber });
+
     // 테스트용 회사 계정 생성
     const companyData = {
-      businessNumber: '123-45-67890',
+      businessNumber: companyBusinessNumber,
       companyName: '테스트 운송회사',
       representative: '홍길동',
       address: '서울시 강남구',
       contactPerson: '홍길동',
-      phone: '010-1234-5678',
-      email: 'test@company.com',
+      phone: companyPhone,
+      email: companyEmail,
       password: 'testpassword123'
     };
 
@@ -30,49 +42,76 @@ describe('Vehicle Rental API Tests', () => {
     if (response.status === 201) {
       authToken = response.body.token;
       companyId = response.body.user.id;
-      
-      // 사업자등록번호 인증 시뮬레이션
-      const verifyResponse = await request(app)
-        .post('/api/auth/verify-business')
-        .send({ businessNumber: '123-45-67890' });
-      
-      console.log('사업자등록번호 인증 응답:', verifyResponse.status, verifyResponse.body);
     } else {
       // 이미 존재하는 경우 로그인 시도
       const loginResponse = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'test@company.com',
-          password: 'testpassword123'
+          phone: companyPhone,
+          password: 'testpassword123',
+          userType: 'company'
         });
       
       console.log('로그인 응답:', loginResponse.status, loginResponse.body);
       if (loginResponse.status === 200) {
         authToken = loginResponse.body.token;
         companyId = loginResponse.body.user.id;
-        
-        // 사업자등록번호 인증 시뮬레이션
-        const verifyResponse = await request(app)
-          .post('/api/auth/verify-business')
-          .send({ businessNumber: '123-45-67890' });
-        
-        console.log('사업자등록번호 인증 응답:', verifyResponse.status, verifyResponse.body);
+      }
+    }
+
+    // 결제/연락처 조회는 개인 사용자 권한이 필요하므로 개인 계정도 준비
+    const userResponse = await request(app)
+      .post('/api/auth/register/user')
+      .send({
+        name: '테스트 개인사용자',
+        phone: userPhone,
+        email: userEmail,
+        password: 'testpassword123',
+      });
+
+    if (userResponse.status === 201) {
+      userToken = userResponse.body.token;
+      userId = userResponse.body.user.id;
+    } else {
+      const loginResponse = await request(app)
+        .post('/api/auth/login')
+        .send({
+          phone: userPhone,
+          password: 'testpassword123',
+          userType: 'user',
+        });
+      if (loginResponse.status === 200) {
+        userToken = loginResponse.body.token;
+        userId = loginResponse.body.user.id;
       }
     }
   });
 
   afterAll(async () => {
     // 테스트 데이터 정리
-    await prisma.payment.deleteMany();
-    await prisma.vehicle.deleteMany();
-    await prisma.company.deleteMany();
+    if (vehicleId) {
+      await prisma.payment.deleteMany({ where: { vehicleId } });
+      await prisma.vehicle.deleteMany({ where: { id: vehicleId } });
+    }
+    if (companyId) {
+      await prisma.company.deleteMany({ where: { id: companyId } });
+    }
+    if (userId) {
+      await prisma.payment.deleteMany({ where: { userId } });
+      await prisma.user.deleteMany({ where: { id: userId } });
+    }
     await prisma.$disconnect();
   });
 
   describe('인증 테스트', () => {
     test('회사 회원가입', async () => {
+      // 사업자등록번호 인증 시뮬레이션 (회사 회원가입 전 선행)
+      await request(app)
+        .post('/api/auth/verify-business')
+        .send({ businessNumber: '987-65-43210' });
+
       const companyData = {
-        businessNumber: '9876543210',
+        businessNumber: '987-65-43210',
         companyName: '테스트 회사2',
         representative: '김철수',
         address: '서울시 서초구',
@@ -109,8 +148,9 @@ describe('Vehicle Rental API Tests', () => {
 
     test('로그인', async () => {
       const loginData = {
-        email: 'test@company.com',
-        password: 'testpassword123'
+        phone: companyPhone,
+        password: 'testpassword123',
+        userType: 'company'
       };
 
       const response = await request(app)
@@ -133,7 +173,7 @@ describe('Vehicle Rental API Tests', () => {
         monthlyFee: 500000,
         insuranceRate: 5,
         description: '테스트 차량입니다.',
-        phone: '010-1234-5678'
+        phone: companyPhone
       };
 
       const response = await request(app)
@@ -207,29 +247,31 @@ describe('Vehicle Rental API Tests', () => {
 
       const response = await request(app)
         .post('/api/payments')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${userToken}`)
         .send(paymentData);
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('payment');
+      expect(response.body.payment).toHaveProperty('id');
     });
 
     test('결제 상태 확인', async () => {
       const response = await request(app)
         .get(`/api/payments/status/${vehicleId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('isPaid');
+      expect(response.body).toHaveProperty('hasPaid');
     });
 
     test('결제 후 연락처 조회', async () => {
       const response = await request(app)
         .get(`/api/payments/contact/${vehicleId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('phone');
+      expect(response.body).toHaveProperty('company');
+      expect(response.body.company).toHaveProperty('phone');
     });
   });
 

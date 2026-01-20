@@ -21,6 +21,7 @@ export const authService = {
   registerUser: async (data: {
     name: string;
     phone: string;
+    email: string;
     password: string;
   }): Promise<AuthResponse> => {
     const response = await api.post("/auth/register/user", data);
@@ -52,5 +53,10 @@ export const authService = {
   getCurrentUser: async (): Promise<AuthResponse> => {
     const response = await api.get("/auth/me");
     return response.data;
+  },
+
+  // 연락받을 번호 업데이트 (회사)
+  updateContactPhone: async (contactPhone: string): Promise<void> => {
+    await api.put("/companies/contact-phone", { contactPhone });
   },
 };

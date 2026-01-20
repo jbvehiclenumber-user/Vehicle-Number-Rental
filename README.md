@@ -67,8 +67,6 @@ npm start
 - `POST /api/auth/register/company` - 회사 회원가입
 - `POST /api/auth/login` - 로그인
 - `POST /api/auth/verify-business` - 사업자등록번호 인증
-- `POST /api/auth/send-verification` - 인증번호 발송
-- `POST /api/auth/verify-user` - 개인 본인인증
 - `GET /api/auth/me` - 현재 사용자 정보
 
 ### 차량 (Vehicles)
@@ -93,6 +91,7 @@ npm start
 
 - `GET /api/companies/profile` - 회사 정보 조회
 - `PUT /api/companies/profile` - 회사 정보 수정
+- `PUT /api/companies/contact-phone` - 기사들이 연락할 번호 업데이트 (결제 후 공개용)
 - `GET /api/companies/stats` - 회사 통계 조회
 
 ## 데이터베이스 스키마

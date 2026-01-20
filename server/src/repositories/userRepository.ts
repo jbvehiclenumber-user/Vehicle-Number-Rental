@@ -71,11 +71,14 @@ export class UserRepository {
   async create(data: {
     name: string;
     phone: string;
-    email: string;
+    email: string | null;
     password: string;
   }): Promise<User> {
     return prisma.user.create({
-      data,
+      data: {
+        ...data,
+        email: data.email || null, // 빈 문자열을 null로 변환
+      },
     });
   }
 

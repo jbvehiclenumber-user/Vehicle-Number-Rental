@@ -17,6 +17,7 @@ const SignupPage: React.FC = () => {
   const [userData, setUserData] = useState({
     name: "",
     phone: "",
+    email: "",
     password: "",
     confirmPassword: "",
   });
@@ -34,6 +35,8 @@ const SignupPage: React.FC = () => {
   });
 
   const [businessVerified, setBusinessVerified] = useState(false);
+  const [showContactPhoneModal, setShowContactPhoneModal] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
 
   const handleVerifyBusiness = async () => {
     if (!companyData.businessNumber) {
@@ -65,7 +68,7 @@ const SignupPage: React.FC = () => {
   const handleUserSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userData.name.trim() || !userData.phone.trim() || !userData.password.trim() || !userData.confirmPassword.trim()) {
+    if (!userData.name.trim() || !userData.phone.trim() || !userData.email.trim() || !userData.password.trim() || !userData.confirmPassword.trim()) {
       setError("모든 필드를 입력해주세요.");
       return;
     }
@@ -82,6 +85,7 @@ const SignupPage: React.FC = () => {
       const response = await authService.registerUser({
         name: userData.name,
         phone: userData.phone,
+        email: userData.email,
         password: userData.password,
       });
 
@@ -135,10 +139,10 @@ const SignupPage: React.FC = () => {
       });
 
       setAuth(response.token, response.user, response.userType);
-      navigate("/company/dashboard");
+      // 회원가입 성공 후 연락받을 번호 입력 모달 표시
+      setShowContactPhoneModal(true);
     } catch (err: any) {
       setError(err.response?.data?.message || "회원가입에 실패했습니다.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -217,6 +221,22 @@ const SignupPage: React.FC = () => {
                 }
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="010-1234-5678"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                이메일
+              </label>
+              <input
+                type="email"
+                required
+                value={userData.email}
+                onChange={(e) =>
+                  setUserData({ ...userData, email: e.target.value })
+                }
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="example@email.com"
               />
             </div>
 
@@ -433,6 +453,61 @@ const SignupPage: React.FC = () => {
         </div>
         </div>
       </div>
+
+      {/* 연락받을 번호 입력 모달 */}
+      {showContactPhoneModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">기사들께 연락받을 번호를 입력하세요</h2>
+            <p className="text-gray-600 mb-4">
+              결제 후 기사들이 연락할 수 있는 번호를 입력해주세요.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                연락받을 번호
+              </label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="010-1234-5678"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  if (!contactPhone.trim()) {
+                    setError("연락받을 번호를 입력해주세요.");
+                    return;
+                  }
+                  try {
+                    await authService.updateContactPhone(contactPhone);
+                    setShowContactPhoneModal(false);
+                    setIsLoading(false);
+                    navigate("/company/dashboard");
+                  } catch (err: any) {
+                    setError(err.response?.data?.message || "번호 저장에 실패했습니다.");
+                  }
+                }}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                저장
+              </button>
+              <button
+                onClick={() => {
+                  setShowContactPhoneModal(false);
+                  setIsLoading(false);
+                  navigate("/company/dashboard");
+                }}
+                className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                나중에
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

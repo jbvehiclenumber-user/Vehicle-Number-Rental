@@ -38,8 +38,16 @@ export class AuthService {
       throw new Error("이름, 전화번호, 비밀번호를 입력해주세요.");
     }
     
-    if (!data.email?.trim()) {
+    // 이메일 검증 및 정규화
+    const email = data.email?.trim() || null;
+    if (!email) {
       throw new Error("이메일을 입력해주세요.");
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("올바른 이메일 형식이 아닙니다.");
     }
 
     // 전화번호 중복 확인
@@ -48,24 +56,22 @@ export class AuthService {
       throw new Error("이미 등록된 전화번호입니다.");
     }
 
-    // 이메일 중복 확인 (이메일이 제공된 경우)
-    if (data.email) {
-      const existingUserByEmail = await prisma.user.findUnique({
-        where: { email: data.email },
-      });
-      if (existingUserByEmail) {
-        throw new Error("이미 등록된 이메일입니다.");
-      }
+    // 이메일 중복 확인
+    const existingUserByEmail = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUserByEmail) {
+      throw new Error("이미 등록된 이메일입니다.");
     }
 
     // 비밀번호 해시화
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // 사용자 생성
+    // 사용자 생성 (이메일은 정규화된 값 사용)
     const user = await userRepository.create({
-      name: data.name,
-      phone: data.phone,
-      email: data.email,
+      name: data.name.trim(),
+      phone: data.phone.trim(),
+      email: email,
       password: hashedPassword,
     });
 

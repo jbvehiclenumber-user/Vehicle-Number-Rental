@@ -11,47 +11,48 @@ describe('Integration Tests - Complete User Flow', () => {
   let userId: string;
   let vehicleId: string;
   let paymentId: string;
+  const companyBusinessNumber = '222-22-22222';
+  const companyPhone = '010-5555-1001';
+  const userPhone = '010-5555-1002';
+  const companyEmail = 'integration+company@company.com';
+  const userEmail = 'integration+user@user.com';
 
   beforeAll(async () => {
+    // 사업자등록번호 인증 시뮬레이션 (회사 회원가입 전 선행)
+    await request(app)
+      .post('/api/auth/verify-business')
+      .send({ businessNumber: companyBusinessNumber });
+
     // 회사 계정 생성
     const companyResponse = await request(app)
       .post('/api/auth/register/company')
       .send({
-        businessNumber: '999-99-99999',
+        businessNumber: companyBusinessNumber,
         companyName: '통합테스트 회사',
         representative: '홍길동',
         address: '서울시 강남구',
         contactPerson: '홍길동',
-        phone: '010-1234-5678',
-        email: 'integration@company.com',
+        phone: companyPhone,
+        email: companyEmail,
         password: 'testpassword123'
       });
 
     if (companyResponse.status === 201) {
       companyToken = companyResponse.body.token;
       companyId = companyResponse.body.user.id;
-      
-      // 사업자등록번호 인증 시뮬레이션
-      await request(app)
-        .post('/api/auth/verify-business')
-        .send({ businessNumber: '999-99-99999' });
     } else {
       // 이미 존재하는 경우 로그인 시도
       const loginResponse = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'integration@company.com',
-          password: 'testpassword123'
+          phone: companyPhone,
+          password: 'testpassword123',
+          userType: 'company'
         });
       
       if (loginResponse.status === 200) {
         companyToken = loginResponse.body.token;
         companyId = loginResponse.body.user.id;
-        
-        // 사업자등록번호 인증 시뮬레이션
-        await request(app)
-          .post('/api/auth/verify-business')
-          .send({ businessNumber: '999-99-99999' });
       }
     }
 
@@ -60,8 +61,8 @@ describe('Integration Tests - Complete User Flow', () => {
       .post('/api/auth/register/user')
       .send({
         name: '개인사용자',
-        phone: '010-9876-5432',
-        email: 'integration@user.com',
+        phone: userPhone,
+        email: userEmail,
         password: 'testpassword123'
       });
 
@@ -73,8 +74,9 @@ describe('Integration Tests - Complete User Flow', () => {
       const loginResponse = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'integration@user.com',
-          password: 'testpassword123'
+          phone: userPhone,
+          password: 'testpassword123',
+          userType: 'user'
         });
       
       if (loginResponse.status === 200) {
@@ -86,10 +88,17 @@ describe('Integration Tests - Complete User Flow', () => {
 
   afterAll(async () => {
     // 테스트 데이터 정리
-    await prisma.payment.deleteMany();
-    await prisma.vehicle.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    if (vehicleId) {
+      await prisma.payment.deleteMany({ where: { vehicleId } });
+      await prisma.vehicle.deleteMany({ where: { id: vehicleId } });
+    }
+    if (companyId) {
+      await prisma.company.deleteMany({ where: { id: companyId } });
+    }
+    if (userId) {
+      await prisma.payment.deleteMany({ where: { userId } });
+      await prisma.user.deleteMany({ where: { id: userId } });
+    }
     await prisma.$disconnect();
   });
 
@@ -104,7 +113,7 @@ describe('Integration Tests - Complete User Flow', () => {
       monthlyFee: 500000,
       insuranceRate: 5,
       description: '통합테스트 차량',
-      phone: '010-1234-5678'
+      phone: companyPhone
     };
 
     const vehicleResponse = await request(app)
@@ -141,7 +150,7 @@ describe('Integration Tests - Complete User Flow', () => {
       .set('Authorization', `Bearer ${userToken}`);
 
     expect(statusResponse.status).toBe(200);
-    expect(statusResponse.body.isPaid).toBe(true);
+    expect(statusResponse.body.hasPaid).toBe(true);
 
     // 5. 연락처 조회
     const contactResponse = await request(app)
@@ -149,7 +158,7 @@ describe('Integration Tests - Complete User Flow', () => {
       .set('Authorization', `Bearer ${userToken}`);
 
     expect(contactResponse.status).toBe(200);
-    expect(contactResponse.body.phone).toBe('010-1234-5678');
+    expect(contactResponse.body.company.phone).toBe(companyPhone);
 
     // 6. 회사가 내 차량 목록 확인
     const myVehiclesResponse = await request(app)

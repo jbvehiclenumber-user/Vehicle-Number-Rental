@@ -50,6 +50,14 @@ export const registerCompany = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { phone, password, userType } = req.body;
+    if (!phone?.trim() || !password?.trim() || !userType?.trim()) {
+      return res.status(400).json({ message: "전화번호, 비밀번호, 사용자 타입을 입력해주세요." });
+    }
+
+    if (userType !== "user" && userType !== "company") {
+      return res.status(400).json({ message: "사용자 타입이 올바르지 않습니다." });
+    }
+
     const result = await authService.login({ phone, password, userType });
     res.json(result);
   } catch (error) {
