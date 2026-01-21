@@ -55,6 +55,35 @@ export const authService = {
     return response.data;
   },
 
+  // 개인 프로필 수정
+  updateUserProfile: async (data: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    password?: string;
+  }): Promise<AuthResponse> => {
+    const response = await api.put("/auth/profile", data);
+    return response.data;
+  },
+
+  // 회사 프로필 조회/수정
+  getCompanyProfile: async () => {
+    const response = await api.get("/companies/profile");
+    return response.data;
+  },
+
+  updateCompanyProfile: async (data: {
+    companyName?: string;
+    representative?: string;
+    address?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+  }) => {
+    const response = await api.put("/companies/profile", data);
+    return response.data;
+  },
+
   // 연락받을 번호 업데이트 (회사)
   updateContactPhone: async (contactPhone: string): Promise<void> => {
     await api.put("/companies/contact-phone", { contactPhone });

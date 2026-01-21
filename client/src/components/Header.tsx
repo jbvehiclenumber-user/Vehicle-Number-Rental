@@ -44,11 +44,15 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               </>
             ) : (
               <>
-                <span className="text-gray-600">
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition font-medium"
+                  aria-label="프로필 수정으로 이동"
+                >
                   {userType === "company"
                     ? (user as any)?.companyName
                     : `${(user as any)?.name}님`}
-                </span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-gray-700 hover:text-gray-900"

@@ -93,6 +93,60 @@ export class AuthService {
   }
 
   /**
+   * 개인 사용자 프로필 업데이트
+   */
+  async updateUserProfile(userId: string, data: Partial<RegisterUserData> & { password?: string }) {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new Error("사용자를 찾을 수 없습니다.");
+    }
+
+    const updates: Partial<{ name: string; phone: string; email: string | null; password: string }> = {};
+
+    if (data.name?.trim()) {
+      updates.name = data.name.trim();
+    }
+
+    if (data.phone?.trim() && data.phone.trim() !== user.phone) {
+      const duplicatedPhone = await userRepository.findByPhone(data.phone.trim());
+      if (duplicatedPhone && duplicatedPhone.id !== user.id) {
+        throw new Error("이미 등록된 전화번호입니다.");
+      }
+      updates.phone = data.phone.trim();
+    }
+
+    if (data.email !== undefined) {
+      const email = data.email?.trim() || null;
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          throw new Error("올바른 이메일 형식이 아닙니다.");
+        }
+        const duplicatedEmail = await prisma.user.findUnique({ where: { email } });
+        if (duplicatedEmail && duplicatedEmail.id !== user.id) {
+          throw new Error("이미 등록된 이메일입니다.");
+        }
+      }
+      updates.email = email;
+    }
+
+    if (data.password?.trim()) {
+      updates.password = await bcrypt.hash(data.password.trim(), 10);
+    }
+
+    const updated = await userRepository.update(user.id, updates);
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      phone: updated.phone,
+      email: updated.email,
+      verified: updated.verified,
+      createdAt: updated.createdAt,
+    };
+  }
+
+  /**
    * 회사 회원가입
    */
   async registerCompany(data: RegisterCompanyData) {

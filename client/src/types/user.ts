@@ -3,6 +3,7 @@ export interface User {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   verified: boolean;
   verifiedAt?: string;
   createdAt: string;
