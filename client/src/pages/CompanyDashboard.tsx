@@ -1,15 +1,11 @@
 // src/pages/CompanyDashboard.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../stores/authStore";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFormData } from "../types/vehicle";
 import Header from "../components/Header";
 import { COLORS } from "../constants/colors";
 
 const CompanyDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { logout } = useAuthStore();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
