@@ -1,7 +1,6 @@
 // src/pages/DriverDashboard.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuthStore } from "../stores/authStore";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFilter } from "../types/vehicle";
 import Header from "../components/Header";
