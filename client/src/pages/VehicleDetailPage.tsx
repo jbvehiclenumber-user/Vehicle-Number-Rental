@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle } from "../types/vehicle";
 import Header from "../components/Header";
+import { COLORS } from "../constants/colors";
 
 const VehicleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +36,10 @@ const VehicleDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div 
+          className="inline-block animate-spin rounded-full h-12 w-12 border-b-2"
+          style={{ borderColor: COLORS.navy.primary }}
+        ></div>
       </div>
     );
   }
@@ -60,15 +64,23 @@ const VehicleDetailPage: React.FC = () => {
         </button>
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Vehicle Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+          <div 
+            className="text-white p-6"
+            style={{ 
+              background: `linear-gradient(to right, ${COLORS.navy.primary}, ${COLORS.navy.hover})`
+            }}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold mb-2">
                   {vehicle.vehicleNumber}
                 </h1>
-                <p className="text-blue-100">{vehicle.vehicleType}</p>
+                <p className="text-gray-200">{vehicle.vehicleType}</p>
               </div>
-              <span className="px-3 py-1 bg-white text-blue-600 rounded-full text-sm font-semibold">
+              <span 
+                className="px-3 py-1 bg-white rounded-full text-sm font-semibold"
+                style={{ color: COLORS.navy.primary }}
+              >
                 {vehicle.region}
               </span>
             </div>
@@ -102,9 +114,12 @@ const VehicleDetailPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div 
+                className="flex items-center justify-between p-4 rounded-lg"
+                style={{ backgroundColor: COLORS.navy.light }}
+              >
                 <span className="text-gray-700 font-medium">월 지입료</span>
-                <span className="text-2xl font-bold text-blue-600">
+                <span className="text-2xl font-bold" style={{ color: COLORS.navy.primary }}>
                   {vehicle.monthlyFee.toLocaleString()}원
                 </span>
               </div>
@@ -140,7 +155,8 @@ const VehicleDetailPage: React.FC = () => {
                   <span className="text-gray-700">전화번호</span>
                   <a
                     href={`tel:${vehicle.company?.contactPhone || vehicle.company?.phone || ""}`}
-                    className="font-semibold text-blue-600 hover:underline"
+                    className="font-semibold hover:underline"
+                    style={{ color: COLORS.navy.primary }}
                   >
                     {vehicle.company?.contactPhone || vehicle.company?.phone || "-"}
                   </a>

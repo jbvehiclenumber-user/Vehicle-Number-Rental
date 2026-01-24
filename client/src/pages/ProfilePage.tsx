@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuthStore } from "../stores/authStore";
 import { authService } from "../services/authService";
+import { COLORS } from "../constants/colors";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -275,7 +276,16 @@ const ProfilePage: React.FC = () => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        className="w-full py-3 px-4 text-white rounded-md transition disabled:opacity-50"
+        style={{ backgroundColor: COLORS.navy.primary }}
+        onMouseEnter={(e) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.style.backgroundColor = COLORS.navy.hover;
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = COLORS.navy.primary;
+        }}
       >
         {isLoading ? "저장 중..." : "저장"}
       </button>
@@ -480,7 +490,16 @@ const ProfilePage: React.FC = () => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        className="w-full py-3 px-4 text-white rounded-md transition disabled:opacity-50"
+        style={{ backgroundColor: COLORS.navy.primary }}
+        onMouseEnter={(e) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.style.backgroundColor = COLORS.navy.hover;
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = COLORS.navy.primary;
+        }}
       >
         {isLoading ? "저장 중..." : "저장"}
       </button>
@@ -497,7 +516,10 @@ const ProfilePage: React.FC = () => {
             onClick={() =>
               navigate(userType === "company" ? "/company/dashboard" : "/driver/dashboard")
             }
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm transition"
+            style={{ color: COLORS.navy.primary }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
           >
             돌아가기
           </button>

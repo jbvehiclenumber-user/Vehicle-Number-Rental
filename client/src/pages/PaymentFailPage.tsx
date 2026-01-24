@@ -1,6 +1,7 @@
 // src/pages/PaymentFailPage.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { COLORS } from "../constants/colors";
 
 const PaymentFailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,7 +38,10 @@ const PaymentFailPage: React.FC = () => {
         <div className="space-y-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+            className="w-full text-white py-2 px-4 rounded-lg transition"
+            style={{ backgroundColor: COLORS.navy.primary }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
           >
             다시 시도
           </button>

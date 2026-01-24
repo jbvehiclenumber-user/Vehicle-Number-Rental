@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import { COLORS } from "../constants/colors";
 
 interface HeaderProps {
   title?: string;
@@ -22,7 +23,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         <div className="flex justify-between items-center">
           <button
             onClick={() => navigate("/")}
-            className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition"
+            className="text-2xl font-bold text-gray-900 transition"
+            style={{ '--hover-color': COLORS.navy.primary } as React.CSSProperties}
+            onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#111827')}
           >
             JUNGBU
           </button>
@@ -37,7 +41,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                 </button>
                 <button
                   onClick={() => navigate("/signup")}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 text-white rounded-lg transition"
+                  style={{ backgroundColor: COLORS.navy.primary }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
                 >
                   회원가입
                 </button>
@@ -46,7 +53,16 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               <>
                 <button
                   onClick={() => navigate("/profile")}
-                  className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition font-medium"
+                  className="px-3 py-2 text-gray-700 rounded-md transition font-medium"
+                  style={{ '--hover-color': COLORS.navy.primary } as React.CSSProperties}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = COLORS.navy.primary;
+                    e.currentTarget.style.backgroundColor = '#f0f4f8';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#374151';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                   aria-label="프로필 수정으로 이동"
                 >
                   {userType === "company"

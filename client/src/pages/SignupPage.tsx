@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { authService } from "../services/authService";
 import Header from "../components/Header";
+import { COLORS } from "../constants/colors";
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -214,9 +215,10 @@ const SignupPage: React.FC = () => {
             onClick={() => setUserType("user")}
             className={`flex-1 py-2 rounded-md font-medium transition ${
               userType === "user"
-                ? "bg-white text-blue-600 shadow"
+                ? "bg-white shadow"
                 : "text-gray-600"
             }`}
+            style={userType === "user" ? { color: COLORS.navy.primary } : {}}
           >
             기사 회원가입
           </button>
@@ -224,9 +226,10 @@ const SignupPage: React.FC = () => {
             onClick={() => setUserType("company")}
             className={`flex-1 py-2 rounded-md font-medium transition ${
               userType === "company"
-                ? "bg-white text-blue-600 shadow"
+                ? "bg-white shadow"
                 : "text-gray-600"
             }`}
+            style={userType === "company" ? { color: COLORS.navy.primary } : {}}
           >
             회사 회원가입
           </button>
@@ -375,9 +378,24 @@ const SignupPage: React.FC = () => {
               disabled={isLoading || !isUserFormValid()}
               className={`w-full py-3 px-4 rounded-md transition ${
                 isUserFormValid() && !isLoading
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "text-white"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
+              style={
+                isUserFormValid() && !isLoading
+                  ? { backgroundColor: COLORS.navy.primary }
+                  : {}
+              }
+              onMouseEnter={(e) => {
+                if (isUserFormValid() && !isLoading) {
+                  e.currentTarget.style.backgroundColor = COLORS.navy.hover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (isUserFormValid() && !isLoading) {
+                  e.currentTarget.style.backgroundColor = COLORS.navy.primary;
+                }
+              }}
             >
               {isLoading ? "가입 중..." : "회원가입"}
             </button>
@@ -591,9 +609,24 @@ const SignupPage: React.FC = () => {
               disabled={isLoading || !isCompanyFormValid()}
               className={`w-full py-3 px-4 rounded-md transition ${
                 isCompanyFormValid() && !isLoading
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "text-white"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
+              style={
+                isCompanyFormValid() && !isLoading
+                  ? { backgroundColor: COLORS.navy.primary }
+                  : {}
+              }
+              onMouseEnter={(e) => {
+                if (isCompanyFormValid() && !isLoading) {
+                  e.currentTarget.style.backgroundColor = COLORS.navy.hover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (isCompanyFormValid() && !isLoading) {
+                  e.currentTarget.style.backgroundColor = COLORS.navy.primary;
+                }
+              }}
             >
               {isLoading ? "가입 중..." : "회원가입"}
             </button>
@@ -603,7 +636,10 @@ const SignupPage: React.FC = () => {
         <div className="mt-6 text-center">
           <Link
             to="/login"
-            className="text-sm text-blue-600 hover:text-blue-500"
+            className="text-sm transition"
+            style={{ color: COLORS.navy.primary }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
           >
             이미 계정이 있으신가요? 로그인하기
           </Link>
@@ -647,7 +683,10 @@ const SignupPage: React.FC = () => {
                     setError(err.response?.data?.message || "번호 저장에 실패했습니다.");
                   }
                 }}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="w-full py-2 px-4 text-white rounded-md transition"
+                style={{ backgroundColor: COLORS.navy.primary }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
               >
                 저장
               </button>

@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/authStore";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFilter } from "../types/vehicle";
 import Header from "../components/Header";
+import { COLORS } from "../constants/colors";
 
 const DriverDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -110,7 +111,10 @@ const DriverDashboard: React.FC = () => {
 
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div 
+                className="inline-block animate-spin rounded-full h-12 w-12 border-b-2"
+                style={{ borderColor: COLORS.navy.primary }}
+              ></div>
             </div>
           ) : vehicles.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -133,7 +137,10 @@ const DriverDashboard: React.FC = () => {
                         {vehicle.vehicleType}
                       </p>
                     </div>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                    <span 
+                      className="px-2 py-1 text-xs rounded"
+                      style={{ backgroundColor: COLORS.navy.light, color: COLORS.navy.primary }}
+                    >
                       {vehicle.region}
                     </span>
                   </div>
@@ -163,14 +170,17 @@ const DriverDashboard: React.FC = () => {
                       <span className="text-gray-900 font-semibold">
                         월 지입료
                       </span>
-                      <span className="text-blue-600 font-bold">
+                      <span className="font-bold" style={{ color: COLORS.navy.primary }}>
                         {vehicle.monthlyFee.toLocaleString()}원
                       </span>
                     </div>
                   </div>
 
                   <button
-                    className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    className="mt-4 w-full py-2 text-white rounded-md transition"
+                    style={{ backgroundColor: COLORS.navy.primary }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleVehicleClick(vehicle.id);

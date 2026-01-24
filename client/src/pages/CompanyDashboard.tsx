@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/authStore";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFormData } from "../types/vehicle";
 import Header from "../components/Header";
+import { COLORS } from "../constants/colors";
 
 const CompanyDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -125,7 +126,10 @@ const CompanyDashboard: React.FC = () => {
         <div className="mb-6">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+            className="px-6 py-3 text-white rounded-lg font-semibold transition"
+            style={{ backgroundColor: COLORS.navy.primary }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
           >
             {showAddForm ? "취소" : "+ 차량 등록"}
           </button>
@@ -287,7 +291,10 @@ const CompanyDashboard: React.FC = () => {
               <div className="md:col-span-2 flex gap-2">
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-6 py-2 text-white rounded-md transition"
+                  style={{ backgroundColor: COLORS.navy.primary }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
                 >
                   {editingVehicle ? "수정" : "등록"}
                 </button>
@@ -311,7 +318,10 @@ const CompanyDashboard: React.FC = () => {
 
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div 
+                className="inline-block animate-spin rounded-full h-12 w-12 border-b-2"
+                style={{ borderColor: COLORS.navy.primary }}
+              ></div>
             </div>
           ) : vehicles.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -363,7 +373,10 @@ const CompanyDashboard: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(vehicle)}
-                      className="flex-1 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                      className="flex-1 py-2 text-white rounded-md text-sm transition"
+                      style={{ backgroundColor: COLORS.navy.primary }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
                     >
                       수정
                     </button>

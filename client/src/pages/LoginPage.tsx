@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { authService } from "../services/authService";
 import Header from "../components/Header";
+import { COLORS } from "../constants/colors";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -111,9 +112,10 @@ const LoginPage: React.FC = () => {
             onClick={() => setUserType("user")}
             className={`flex-1 py-2 rounded-md font-medium transition ${
               userType === "user"
-                ? "bg-white text-blue-600 shadow"
+                ? "bg-white shadow"
                 : "text-gray-600"
             }`}
+            style={userType === "user" ? { color: COLORS.navy.primary } : {}}
           >
             기사 로그인
           </button>
@@ -121,9 +123,10 @@ const LoginPage: React.FC = () => {
             onClick={() => setUserType("company")}
             className={`flex-1 py-2 rounded-md font-medium transition ${
               userType === "company"
-                ? "bg-white text-blue-600 shadow"
+                ? "bg-white shadow"
                 : "text-gray-600"
             }`}
+            style={userType === "company" ? { color: COLORS.navy.primary } : {}}
           >
             회사 로그인
           </button>
@@ -154,7 +157,18 @@ const LoginPage: React.FC = () => {
                   const formatted = formatPhone(e.target.value);
                   setPhone(formatted);
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+                style={{
+                  '--tw-ring-color': COLORS.navy.primary,
+                } as React.CSSProperties}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = COLORS.navy.primary;
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 31, 63, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.boxShadow = '';
+                }}
                 placeholder="010-1234-5678"
               />
             </div>
@@ -224,7 +238,10 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition disabled:opacity-50"
+            style={{ backgroundColor: COLORS.navy.primary }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
           >
             {isLoading ? "로그인 중..." : "로그인"}
           </button>
@@ -232,7 +249,10 @@ const LoginPage: React.FC = () => {
           <div className="text-center space-y-2">
             <Link
               to="/signup"
-              className="text-sm text-blue-600 hover:text-blue-500"
+              className="text-sm transition"
+              style={{ color: COLORS.navy.primary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.hover)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
             >
               회원가입하기
             </Link>
