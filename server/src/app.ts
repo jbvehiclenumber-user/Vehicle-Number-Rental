@@ -46,6 +46,21 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 루트 경로
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Vehicle Number Rental API",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth",
+      vehicles: "/api/vehicles",
+      companies: "/api/companies",
+      payments: "/api/payments"
+    }
+  });
+});
+
 // 헬스체크
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
