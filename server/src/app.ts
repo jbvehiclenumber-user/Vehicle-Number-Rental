@@ -18,9 +18,28 @@ dotenv.config();
 const app: Application = express();
 
 // 미들웨어 설정
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+  : ["http://localhost:3000"];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // origin이 없는 경우 (같은 도메인에서의 요청 등) 허용
+      if (!origin) return callback(null, true);
+      
+      // 허용된 origin인지 확인 (슬래시 제거 후 비교)
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      const isAllowed = allowedOrigins.some(
+        (allowed) => allowed.replace(/\/$/, "") === normalizedOrigin
+      );
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
