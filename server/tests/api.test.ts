@@ -27,8 +27,6 @@ describe('Vehicle Rental API Tests', () => {
       businessNumber: companyBusinessNumber,
       companyName: '테스트 운송회사',
       representative: '홍길동',
-      address: '서울시 강남구',
-      contactPerson: '홍길동',
       phone: companyPhone,
       email: companyEmail,
       password: 'testpassword123'
@@ -114,8 +112,6 @@ describe('Vehicle Rental API Tests', () => {
         businessNumber: '987-65-43210',
         companyName: '테스트 회사2',
         representative: '김철수',
-        address: '서울시 서초구',
-        contactPerson: '김철수',
         phone: '010-9876-5432',
         email: 'test2@company.com',
         password: 'testpassword123'

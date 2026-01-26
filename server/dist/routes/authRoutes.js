@@ -16,4 +16,5 @@ router.post("/login", authController_1.login);
 router.post("/verify-business", authController_1.verifyBusinessNumber);
 // 사용자 정보
 router.get("/me", authMiddleware_1.authMiddleware, authController_1.getCurrentUser);
+router.put("/profile", authMiddleware_1.authMiddleware, authController_1.updateUserProfile);
 exports.default = router;

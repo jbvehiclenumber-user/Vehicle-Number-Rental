@@ -17,7 +17,6 @@ export interface RegisterCompanyData {
   businessNumber: string;
   companyName: string;
   representative: string;
-  contactPerson: string;
   phone: string;
   email?: string;
   password: string;
@@ -173,7 +172,6 @@ export class AuthService {
       !data.businessNumber?.trim() ||
       !data.companyName?.trim() ||
       !data.representative?.trim() ||
-      !data.contactPerson?.trim() ||
       !data.phone?.trim() ||
       !data.password?.trim()
     ) {
@@ -209,7 +207,6 @@ export class AuthService {
       businessNumber: data.businessNumber,
       companyName: data.companyName,
       representative: data.representative,
-      contactPerson: data.contactPerson,
       phone: data.phone,
       email: data.email,
       password: hashedPassword,

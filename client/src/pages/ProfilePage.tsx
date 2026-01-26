@@ -27,8 +27,6 @@ const ProfilePage: React.FC = () => {
     businessNumber: "",
     companyName: "",
     representative: "",
-    address: "",
-    contactPerson: "",
     phone: "",
     email: "",
     contactPhone: "",
@@ -62,8 +60,6 @@ const ProfilePage: React.FC = () => {
             businessNumber: res.businessNumber || "",
             companyName: res.companyName || "",
             representative: res.representative || "",
-            address: res.address || "",
-            contactPerson: res.contactPerson || "",
             phone: res.phone || "",
             email: res.email || "",
             contactPhone: res.contactPhone || "",
@@ -326,16 +322,6 @@ const ProfilePage: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">담당자명</label>
-          <input
-            type="text"
-            value={companyForm.contactPerson}
-            onChange={(e) => setCompanyForm({ ...companyForm, contactPerson: e.target.value })}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-        <div>
           <label className="block text-sm font-medium text-gray-700">전화번호</label>
           <input
             type="tel"
@@ -363,15 +349,6 @@ const ProfilePage: React.FC = () => {
           type="email"
           value={companyForm.email}
           onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">주소</label>
-        <input
-          type="text"
-          value={companyForm.address}
-          onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>

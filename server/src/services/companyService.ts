@@ -5,8 +5,6 @@ import bcrypt from "bcryptjs";
 export interface UpdateCompanyData {
   companyName?: string;
   representative?: string;
-  address?: string;
-  contactPerson?: string;
   phone?: string;
   email?: string;
   contactPhone?: string;
@@ -30,8 +28,6 @@ export class CompanyService {
       businessNumber: company.businessNumber,
       companyName: company.companyName,
       representative: company.representative,
-      address: company.address,
-      contactPerson: company.contactPerson,
       phone: company.phone,
       contactPhone: company.contactPhone,
       email: company.email,
@@ -93,8 +89,6 @@ export class CompanyService {
       businessNumber: updatedCompany.businessNumber,
       companyName: updatedCompany.companyName,
       representative: updatedCompany.representative,
-      address: updatedCompany.address,
-      contactPerson: updatedCompany.contactPerson,
       phone: updatedCompany.phone,
       contactPhone: updatedCompany.contactPhone,
       email: updatedCompany.email,

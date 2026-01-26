@@ -146,12 +146,6 @@ const VehicleDetailPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-700">담당자</span>
-                  <span className="font-semibold">
-                    {vehicle.company?.contactPerson || "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-gray-700">전화번호</span>
                   <a
                     href={`tel:${vehicle.company?.contactPhone || vehicle.company?.phone || ""}`}

@@ -56,18 +56,11 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <style>{`
-        @media (max-width: 767px) {
-          .hero-bg-mobile {
-            background-position: calc(100% + 200px) center !important;
-          }
-        }
-      `}</style>
       <Header />
 
       {/* Hero Section */}
       <section 
-        className="relative text-white py-60 bg-cover bg-right md:bg-center bg-no-repeat overflow-hidden hero-bg-mobile"
+        className="relative text-white py-60 bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
           backgroundImage: `url(${process.env.PUBLIC_URL || ''}/truck-background.jpg)`,
           backgroundColor: '#1e3a8a', // fallback 배경색
@@ -242,7 +235,10 @@ const HomePage: React.FC = () => {
           </h3>
           <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white">
-            <div className="hover-lift">
+            <div 
+              className={`hover-lift section-hidden ${visibleSections.has('features') ? 'section-visible' : ''}`}
+              style={{ transitionDelay: '0.1s' }}
+            >
               <div className="w-full h-64 mb-4 rounded-lg overflow-hidden">
                 <img 
                   src={`${process.env.PUBLIC_URL || ''}/images/vehicle-number-brokerage.jpg`}
@@ -257,7 +253,10 @@ const HomePage: React.FC = () => {
             
             </div>
             <div className="bg-white">
-              <div className="hover-lift">
+              <div 
+                className={`hover-lift section-hidden ${visibleSections.has('features') ? 'section-visible' : ''}`}
+                style={{ transitionDelay: '0.2s' }}
+              >
                 <div className="w-full h-64 mb-4 rounded-lg overflow-hidden">
                   <img 
                     src={`${process.env.PUBLIC_URL || ''}/images/taxi-lineup.jpg`}

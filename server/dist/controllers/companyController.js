@@ -31,17 +31,19 @@ const updateCompanyProfile = async (req, res) => {
             return res.status(401).json({ message: "인증이 필요합니다." });
         }
         const { userId, userType } = req.user;
-        const { companyName, representative, address, contactPerson, phone, email, } = req.body;
+        const { companyName, representative, phone, email, contactPhone, password, currentPassword, newPassword, } = req.body;
         if (userType !== "company") {
             return res.status(403).json({ message: "회사만 수정할 수 있습니다." });
         }
         const updatedCompany = await companyService_1.companyService.updateCompanyProfile(userId, {
             companyName,
             representative,
-            address,
-            contactPerson,
             phone,
             email,
+            contactPhone,
+            password,
+            currentPassword,
+            newPassword,
         });
         res.json(updatedCompany);
     }

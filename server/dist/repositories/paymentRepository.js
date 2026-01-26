@@ -55,7 +55,7 @@ class PaymentRepository {
                             select: {
                                 companyName: true,
                                 phone: true,
-                                contactPerson: true,
+                                contactPhone: true,
                                 email: true,
                             },
                         },
@@ -77,7 +77,7 @@ class PaymentRepository {
                             select: {
                                 companyName: true,
                                 phone: true,
-                                contactPerson: true,
+                                contactPhone: true,
                             },
                         },
                     },

@@ -14,8 +14,6 @@ export interface Company {
   businessNumber: string;
   companyName: string;
   representative: string;
-  address: string;
-  contactPerson: string;
   phone: string;
   email?: string;
   verified: boolean;

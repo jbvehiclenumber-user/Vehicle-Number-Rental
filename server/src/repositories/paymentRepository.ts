@@ -68,7 +68,6 @@ export class PaymentRepository {
               select: {
                 companyName: true,
                 phone: true,
-                contactPerson: true,
                 contactPhone: true,
                 email: true,
               },
@@ -92,7 +91,6 @@ export class PaymentRepository {
               select: {
                 companyName: true,
                 phone: true,
-                contactPerson: true,
                 contactPhone: true,
               },
             },

@@ -15,8 +15,6 @@ model Company {
   businessNumber    String    @unique @map("business_number") // 사업자등록번호
   companyName       String    @map("company_name")
   representative    String
-  address           String
-  contactPerson     String    @map("contact_person")
   phone             String
   contactPhone      String?   @map("contact_phone") // 기사들이 연락받을 번호
   email             String?

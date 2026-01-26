@@ -73,10 +73,7 @@ class CompanyRepository {
      */
     async create(data) {
         return prisma_1.prisma.company.create({
-            data: {
-                ...data,
-                address: data.address ?? "",
-            },
+            data,
         });
     }
     /**

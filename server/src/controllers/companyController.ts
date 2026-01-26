@@ -37,8 +37,6 @@ export const updateCompanyProfile = async (req: Request, res: Response) => {
     const {
       companyName,
       representative,
-      address,
-      contactPerson,
       phone,
       email,
       contactPhone,
@@ -54,8 +52,6 @@ export const updateCompanyProfile = async (req: Request, res: Response) => {
     const updatedCompany = await companyService.updateCompanyProfile(userId, {
       companyName,
       representative,
-      address,
-      contactPerson,
       phone,
       email,
       contactPhone,

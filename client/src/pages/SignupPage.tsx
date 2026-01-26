@@ -30,7 +30,6 @@ const SignupPage: React.FC = () => {
     businessNumber: "",
     companyName: "",
     representative: "",
-    contactPerson: "",
     phone: "",
     email: "",
     password: "",
@@ -70,7 +69,6 @@ const SignupPage: React.FC = () => {
       companyData.businessNumber.trim() !== "" &&
       companyData.companyName.trim() !== "" &&
       companyData.representative.trim() !== "" &&
-      companyData.contactPerson.trim() !== "" &&
       companyData.phone.trim() !== "" &&
       validatePassword(companyData.password) &&
       companyData.password === companyData.confirmPassword &&
@@ -156,7 +154,6 @@ const SignupPage: React.FC = () => {
       !companyData.businessNumber.trim() ||
       !companyData.companyName.trim() ||
       !companyData.representative.trim() ||
-      !companyData.contactPerson.trim() ||
       !companyData.phone.trim() ||
       !companyData.password.trim() ||
       !companyData.confirmPassword.trim()
@@ -184,7 +181,6 @@ const SignupPage: React.FC = () => {
         businessNumber: companyData.businessNumber,
         companyName: companyData.companyName,
         representative: companyData.representative,
-        contactPerson: companyData.contactPerson,
         phone: companyData.phone,
         email: companyData.email,
         password: companyData.password,
@@ -468,24 +464,6 @@ const SignupPage: React.FC = () => {
                   setCompanyData({
                     ...companyData,
                     representative: e.target.value,
-                  })
-                }
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                담당자명
-              </label>
-              <input
-                type="text"
-                required
-                value={companyData.contactPerson}
-                onChange={(e) =>
-                  setCompanyData({
-                    ...companyData,
-                    contactPerson: e.target.value,
                   })
                 }
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"

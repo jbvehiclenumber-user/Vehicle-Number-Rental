@@ -15,6 +15,8 @@ class VehicleRepository {
                     company: {
                         select: {
                             companyName: true,
+                            phone: true,
+                            contactPhone: true,
                         },
                     },
                 }

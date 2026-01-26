@@ -30,8 +30,6 @@ describe('Integration Tests - Complete User Flow', () => {
         businessNumber: companyBusinessNumber,
         companyName: '통합테스트 회사',
         representative: '홍길동',
-        address: '서울시 강남구',
-        contactPerson: '홍길동',
         phone: companyPhone,
         email: companyEmail,
         password: 'testpassword123'

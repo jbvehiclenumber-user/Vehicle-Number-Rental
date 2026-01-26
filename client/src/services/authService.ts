@@ -8,7 +8,6 @@ export const authService = {
     businessNumber: string;
     companyName: string;
     representative: string;
-    contactPerson: string;
     phone: string;
     email?: string;
     password: string;
@@ -76,8 +75,6 @@ export const authService = {
   updateCompanyProfile: async (data: {
     companyName?: string;
     representative?: string;
-    address?: string;
-    contactPerson?: string;
     phone?: string;
     email?: string;
     contactPhone?: string;

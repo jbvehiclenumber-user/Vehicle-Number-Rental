@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentUser = exports.verifyBusinessNumber = exports.login = exports.registerCompany = exports.registerUser = void 0;
+exports.updateUserProfile = exports.getCurrentUser = exports.verifyBusinessNumber = exports.login = exports.registerCompany = exports.registerUser = void 0;
 const authService_1 = require("../services/authService");
 const businessNumberService = __importStar(require("../services/businessNumberService"));
 const logger_1 = require("../utils/logger");
@@ -54,12 +54,11 @@ exports.registerUser = registerUser;
 // 회사 회원가입
 const registerCompany = async (req, res) => {
     try {
-        const { businessNumber, companyName, representative, contactPerson, phone, email, password, } = req.body;
+        const { businessNumber, companyName, representative, phone, email, password, } = req.body;
         const result = await authService_1.authService.registerCompany({
             businessNumber,
             companyName,
             representative,
-            contactPerson,
             phone,
             email,
             password,
@@ -127,3 +126,27 @@ const getCurrentUser = async (req, res) => {
     }
 };
 exports.getCurrentUser = getCurrentUser;
+// 개인 사용자 프로필 업데이트
+const updateUserProfile = async (req, res) => {
+    try {
+        if (!req.user || req.user.userType !== "user") {
+            return res.status(403).json({ message: "개인 사용자만 수정할 수 있습니다." });
+        }
+        const { name, phone, email, currentPassword, newPassword } = req.body;
+        const result = await authService_1.authService.updateUserProfile(req.user.userId, {
+            name,
+            phone,
+            email,
+            currentPassword,
+            newPassword,
+        });
+        res.json({ user: result, userType: "user" });
+    }
+    catch (error) {
+        logger_1.logger.error("Update user profile error", error instanceof Error ? error : new Error(String(error)));
+        const message = error instanceof Error ? error.message : "프로필 수정에 실패했습니다.";
+        const statusCode = message.includes("등록된") || message.includes("형식") || message.includes("비밀번호") ? 400 : 500;
+        res.status(statusCode).json({ message });
+    }
+};
+exports.updateUserProfile = updateUserProfile;
