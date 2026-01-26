@@ -138,3 +138,38 @@ export const updateContactPhone = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
+// 기존 계정 정보로 새 회사 추가
+export const addCompany = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "인증이 필요합니다." });
+    }
+
+    const { userId, userType } = req.user;
+
+    if (userType !== "company") {
+      return res.status(403).json({ message: "회사만 추가할 수 있습니다." });
+    }
+
+    const { businessNumber, companyName, representative, contactPhone } = req.body;
+
+    if (!businessNumber?.trim() || !companyName?.trim() || !representative?.trim()) {
+      return res.status(400).json({ message: "사업자등록번호, 회사명, 대표자명을 입력해주세요." });
+    }
+
+    const newCompany = await companyService.addCompanyWithExistingAccount(userId, {
+      businessNumber,
+      companyName,
+      representative,
+      contactPhone,
+    });
+
+    res.status(201).json(newCompany);
+  } catch (error) {
+    logger.error("Add company error", error instanceof Error ? error : new Error(String(error)));
+    const message = error instanceof Error ? error.message : "회사 추가에 실패했습니다.";
+    const statusCode = message.includes("이미 등록된") ? 400 : message.includes("인증") ? 400 : 500;
+    res.status(statusCode).json({ message });
+  }
+};

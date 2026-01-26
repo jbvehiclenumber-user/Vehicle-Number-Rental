@@ -32,6 +32,7 @@ export const authService = {
     phone: string;
     password: string;
     userType: "user" | "company";
+    defaultCompanyId?: string;
   }): Promise<AuthResponse> => {
     const response = await api.post("/auth/login", data);
     return response.data;
@@ -88,5 +89,25 @@ export const authService = {
   // 연락받을 번호 업데이트 (회사)
   updateContactPhone: async (contactPhone: string): Promise<void> => {
     await api.put("/companies/contact-phone", { contactPhone });
+  },
+
+  // 회사 전환
+  switchCompany: async (companyId: string, password: string): Promise<AuthResponse> => {
+    const response = await api.post("/auth/switch-company", {
+      companyId,
+      password,
+    });
+    return response.data;
+  },
+
+  // 기존 계정 정보로 새 회사 추가
+  addCompany: async (data: {
+    businessNumber: string;
+    companyName: string;
+    representative: string;
+    contactPhone?: string;
+  }) => {
+    const response = await api.post("/companies/add", data);
+    return response.data;
   },
 };

@@ -138,7 +138,7 @@ const VehicleDetailPage: React.FC = () => {
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold mb-4">연락처 정보</h3>
 
-              <div className="space-y-3 bg-green-50 p-4 rounded-lg">
+              <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between">
                   <span className="text-gray-700">회사명</span>
                   <span className="font-semibold">

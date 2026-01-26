@@ -1,16 +1,113 @@
 // src/pages/CompanyDashboard.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFormData } from "../types/vehicle";
+import { useAuthStore } from "../stores/authStore";
+import { authService } from "../services/authService";
+import { Company } from "../types/user";
 import Header from "../components/Header";
+import CustomSelect from "../components/CustomSelect";
 import { COLORS } from "../constants/colors";
 
-const CompanyDashboard: React.FC = () => {
+// 회사 전환 비밀번호 확인 모달
+const CompanySwitchModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  company: Company;
+  onSuccess: () => void;
+}> = ({ isOpen, onClose, company, onSuccess }) => {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await authService.switchCompany(company.id, password);
+      const { setAuth } = useAuthStore.getState();
+      setAuth(
+        response.token,
+        response.user,
+        response.userType,
+        useAuthStore.getState().companies
+      );
+      onSuccess();
+      onClose();
+      setPassword("");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "회사 전환에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">회사 전환</h2>
+        <p className="text-gray-600 mb-4">
+          <strong>{company.companyName}</strong>으로 전환하려면 비밀번호를 입력해주세요.
+        </p>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              비밀번호
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="비밀번호를 입력하세요"
+              required
+              autoFocus
+            />
+          </div>
+          {error && (
+            <div className="mb-4 text-red-600 text-sm">{error}</div>
+          )}
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              disabled={isLoading}
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-white rounded-md transition"
+              style={{ backgroundColor: COLORS.navy.primary }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
+              disabled={isLoading}
+            >
+              {isLoading ? "전환 중..." : "전환"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const CompanyDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, companies, setDefaultCompanyId, getDefaultCompanyId } = useAuthStore();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+  const [selectedCompanyForSwitch, setSelectedCompanyForSwitch] = useState<Company | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<VehicleFormData>({
     vehicleNumber: "",
@@ -47,6 +144,38 @@ const CompanyDashboard: React.FC = () => {
   useEffect(() => {
     loadMyVehicles();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCompanyDropdownOpen(false);
+      }
+    };
+
+    if (isCompanyDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCompanyDropdownOpen]);
+
+  const handleCompanySwitch = (company: Company) => {
+    // 현재 회사와 같으면 전환하지 않음
+    if (user && (user as Company).id === company.id) {
+      setIsCompanyDropdownOpen(false);
+      return;
+    }
+    setSelectedCompanyForSwitch(company);
+    setIsCompanyDropdownOpen(false);
+  };
+
+
+  const handleSwitchSuccess = () => {
+    // 새 회사로 전환되었으므로 차량 목록만 다시 로드
+    loadMyVehicles();
+  };
 
   const loadMyVehicles = async () => {
     setIsLoading(true);
@@ -131,6 +260,132 @@ const CompanyDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header title="회사 대시보드" />
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* 회사 선택 및 추가 */}
+        {user && (user as Company)?.companyName && (
+          <div className="mb-6 bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                등록할 회사
+              </label>
+              <button
+                type="button"
+                onClick={() => navigate("/profile?addCompany=true")}
+                className="text-sm px-3 py-1 text-white rounded-md transition"
+                style={{ backgroundColor: COLORS.navy.primary }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
+              >
+                + 회사 추가
+              </button>
+            </div>
+            {companies && companies.length > 1 ? (
+              <div className="flex gap-2">
+                <div className="relative flex-1" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                    className="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white flex items-center justify-between hover:border-gray-400 transition cursor-pointer"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">{(user as Company)?.companyName}</span>
+                      <span className="text-xs text-gray-500">{(user as Company)?.businessNumber}</span>
+                    </div>
+                    <svg
+                      className={`w-4 h-4 text-gray-500 transition-transform ${
+                        isCompanyDropdownOpen ? "transform rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                  {isCompanyDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                      <div className="py-1">
+                        {[...companies]
+                          .sort((a, b) => {
+                            const defaultId = getDefaultCompanyId();
+                            // 기본 회사를 맨 앞으로
+                            if (a.id === defaultId) return -1;
+                            if (b.id === defaultId) return 1;
+                            return 0;
+                          })
+                          .map((company) => {
+                            const isCurrentCompany = (user as Company)?.id === company.id;
+                            const isDefaultCompany = getDefaultCompanyId() === company.id;
+                            return (
+                              <button
+                                key={company.id}
+                                type="button"
+                                onClick={() => handleCompanySwitch(company)}
+                                className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition ${
+                                  isCurrentCompany
+                                    ? "bg-blue-100 text-blue-900 font-medium"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1">
+                                    <div className="font-medium">{company.companyName}</div>
+                                    <div className="text-xs text-gray-500">{company.businessNumber}</div>
+                                  </div>
+                                  {isDefaultCompany && (
+                                    <span className="text-sm text-blue-600 font-medium">기본</span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* 기본 회사 설정 체크 버튼 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (user) {
+                      const currentCompanyId = (user as Company).id;
+                      setDefaultCompanyId(currentCompanyId);
+                      window.alert(`${(user as Company).companyName}이(가) 기본 회사로 설정되었습니다.`);
+                    }
+                  }}
+                  className={`px-3 py-2 border rounded-md transition flex items-center justify-center ${
+                    getDefaultCompanyId() === (user as Company)?.id
+                      ? "border-blue-500 bg-blue-50 text-blue-600"
+                      : "border-gray-300 bg-white text-gray-400 hover:border-gray-400"
+                  }`}
+                  title="기본 회사로 설정"
+                >
+                  {getDefaultCompanyId() === (user as Company)?.id ? (
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900">{(user as Company)?.companyName}</span>
+                  <span className="text-xs text-gray-500">{(user as Company)?.businessNumber}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Add Vehicle Button */}
         <div className="mb-6">
           <button
@@ -228,27 +483,16 @@ const CompanyDashboard: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   지역 *
                 </label>
-                <select
-                  required
+                <CustomSelect
                   value={formData.region}
-                  onChange={(e) =>
-                    setFormData({ ...formData, region: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, region: value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md appearance-none bg-white"
-                  style={{ 
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 0.75rem center',
-                    backgroundSize: '12px',
-                    paddingRight: '2.5rem'
-                  }}
-                >
-                  {regions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </select>
+                  options={regions.map((region) => ({ value: region, label: region }))}
+                  placeholder="지역을 선택하세요"
+                  required
+                  className="w-full"
+                />
               </div>
 
               <div>
@@ -365,7 +609,7 @@ const CompanyDashboard: React.FC = () => {
                     <span
                       className={`px-2 py-1 text-xs rounded ${
                         vehicle.isAvailable
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-blue-100 text-blue-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
@@ -409,6 +653,15 @@ const CompanyDashboard: React.FC = () => {
           )}
         </div>
       </div>
+      {/* 회사 전환 모달 */}
+      {selectedCompanyForSwitch && (
+        <CompanySwitchModal
+          isOpen={!!selectedCompanyForSwitch}
+          onClose={() => setSelectedCompanyForSwitch(null)}
+          company={selectedCompanyForSwitch}
+          onSuccess={handleSwitchSuccess}
+        />
+      )}
     </div>
   );
 };

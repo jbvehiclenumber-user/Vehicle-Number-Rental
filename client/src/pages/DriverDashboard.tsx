@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { vehicleService } from "../services/vehicleService";
 import { Vehicle, VehicleFilter } from "../types/vehicle";
 import Header from "../components/Header";
+import CustomSelect from "../components/CustomSelect";
 import { COLORS } from "../constants/colors";
 
 const DriverDashboard: React.FC = () => {
@@ -70,32 +71,18 @@ const DriverDashboard: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 지역
               </label>
-              <select
+              <CustomSelect
                 value={filter.region || ""}
-                onChange={(e) =>
-                  setFilter({ ...filter, region: e.target.value || undefined })
+                onChange={(value) =>
+                  setFilter({ ...filter, region: value || undefined })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md appearance-none bg-white"
-                style={{ 
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem center',
-                  backgroundSize: '12px',
-                  paddingRight: '2.5rem'
-                }}
-              >
-                <option value="">전체</option>
-                {regions.map((region) => (
-                  <option key={region} value={region}>
-                    {region}
-                  </option>
-                ))}
-              </select>
-              <style>{`
-                select option {
-                  padding: 8px;
-                }
-              `}</style>
+                options={[
+                  { value: "", label: "전체" },
+                  ...regions.map((region) => ({ value: region, label: region })),
+                ]}
+                placeholder="전체"
+                className="w-full"
+              />
             </div>
 
             {/* 지입료 필터 */}

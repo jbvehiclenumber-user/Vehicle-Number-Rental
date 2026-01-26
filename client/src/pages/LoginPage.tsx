@@ -8,7 +8,7 @@ import { COLORS } from "../constants/colors";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, getDefaultCompanyId } = useAuthStore();
 
   const [userType, setUserType] = useState<"user" | "company">("user");
   const [phone, setPhone] = useState("");
@@ -48,10 +48,15 @@ const LoginPage: React.FC = () => {
       // 전화번호 정규화 (하이픈 제거)
       const normalizedPhone = normalizePhone(phone);
       console.log("로그인 시도:", { phone: normalizedPhone, userType });
+      
+      // 기본 회사 ID 가져오기 (회사 로그인인 경우)
+      const defaultCompanyId = userType === "company" ? getDefaultCompanyId() : undefined;
+      
       const response = await authService.login({
         phone: normalizedPhone,
         password,
         userType,
+        defaultCompanyId: defaultCompanyId || undefined,
       });
 
       console.log("로그인 성공:", response);
@@ -61,8 +66,21 @@ const LoginPage: React.FC = () => {
         throw new Error("로그인 응답이 올바르지 않습니다.");
       }
 
-      // 인증 정보 저장
-      setAuth(response.token, response.user, response.userType);
+      // 인증 정보 저장 (회사 목록 포함)
+      setAuth(
+        response.token,
+        response.user,
+        response.userType,
+        response.companies || []
+      );
+
+      // 기본 회사 ID가 없고 회사가 여러 개 있으면 첫 번째 회사를 기본으로 설정
+      if (userType === "company" && response.companies && response.companies.length > 0) {
+        const { getDefaultCompanyId, setDefaultCompanyId } = useAuthStore.getState();
+        if (!getDefaultCompanyId()) {
+          setDefaultCompanyId(response.companies[0].id);
+        }
+      }
 
       // 대시보드로 이동
       if (userType === "company") {

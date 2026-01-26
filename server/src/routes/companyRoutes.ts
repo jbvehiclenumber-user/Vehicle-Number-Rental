@@ -6,6 +6,7 @@ import {
   updateCompanyVerification,
   getCompanyStats,
   updateContactPhone,
+  addCompany,
 } from "../controllers/companyController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
@@ -17,5 +18,6 @@ router.put("/profile", authMiddleware, updateCompanyProfile);
 router.put("/contact-phone", authMiddleware, updateContactPhone);
 router.get("/stats", authMiddleware, getCompanyStats);
 router.put("/verify/:companyId", authMiddleware, updateCompanyVerification);
+router.post("/add", authMiddleware, addCompany);
 
 export default router;
