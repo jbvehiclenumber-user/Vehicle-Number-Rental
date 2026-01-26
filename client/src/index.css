@@ -22,4 +22,16 @@
   .card {
     @apply bg-white rounded-lg shadow-md p-6;
   }
+
+  /* 모바일에서만 백그라운드 이미지 위치 조정 */
+  .hero-background {
+    background-position: center center;
+  }
+
+  @media (max-width: 767px) {
+    .hero-background {
+      /* 이미지 오른쪽 끝을 화면 오른쪽에 맞추고, 200px 오른쪽으로 이동 */
+      background-position: right -200px center;
+    }
+  }
 }

@@ -29,7 +29,8 @@ export const authService = {
 
   // 로그인
   login: async (data: {
-    phone: string;
+    identifier: string; // 전화번호 또는 이메일
+    isEmail: boolean;
     password: string;
     userType: "user" | "company";
     defaultCompanyId?: string;
@@ -108,6 +109,35 @@ export const authService = {
     contactPhone?: string;
   }) => {
     const response = await api.post("/companies/add", data);
+    return response.data;
+  },
+
+  // OAuth 인증 URL 가져오기
+  getKakaoAuthUrl: async (): Promise<string> => {
+    const response = await api.get("/auth/oauth/kakao/url");
+    return response.data.authUrl;
+  },
+
+  getGoogleAuthUrl: async (): Promise<string> => {
+    const response = await api.get("/auth/oauth/google/url");
+    return response.data.authUrl;
+  },
+
+  // 비밀번호 찾기 요청
+  requestPasswordReset: async (identifier: string, isEmail: boolean): Promise<{ message: string; token?: string; resetUrl?: string }> => {
+    const response = await api.post("/auth/password/reset-request", {
+      identifier,
+      isEmail,
+    });
+    return response.data;
+  },
+
+  // 비밀번호 재설정
+  resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await api.post("/auth/password/reset", {
+      token,
+      newPassword,
+    });
     return response.data;
   },
 };

@@ -47,16 +47,22 @@ export const registerCompany = async (req: Request, res: Response) => {
 // 로그인
 export const login = async (req: Request, res: Response) => {
   try {
-    const { phone, password, userType } = req.body;
-    if (!phone?.trim() || !password?.trim() || !userType?.trim()) {
-      return res.status(400).json({ message: "전화번호, 비밀번호, 사용자 타입을 입력해주세요." });
+    const { identifier, isEmail, password, userType, defaultCompanyId } = req.body;
+    if (!identifier?.trim() || !password?.trim() || !userType?.trim()) {
+      return res.status(400).json({ message: "전화번호/이메일, 비밀번호, 사용자 타입을 입력해주세요." });
     }
 
     if (userType !== "user" && userType !== "company") {
       return res.status(400).json({ message: "사용자 타입이 올바르지 않습니다." });
     }
 
-    const result = await authService.login({ phone, password, userType });
+    const result = await authService.login({ 
+      identifier, 
+      isEmail: isEmail || false, 
+      password, 
+      userType,
+      defaultCompanyId,
+    });
     res.json(result);
   } catch (error) {
     logger.error("Login error", error instanceof Error ? error : new Error(String(error)));
@@ -146,6 +152,41 @@ export const switchCompany = async (req: Request, res: Response) => {
     logger.error("Switch company error", error instanceof Error ? error : new Error(String(error)));
     const message = error instanceof Error ? error.message : "회사 전환에 실패했습니다.";
     const statusCode = message.includes("비밀번호") || message.includes("권한") ? 401 : message.includes("찾을 수 없습니다") ? 404 : 500;
+    res.status(statusCode).json({ message });
+  }
+};
+
+// 비밀번호 찾기 요청
+export const requestPasswordReset = async (req: Request, res: Response) => {
+  try {
+    const { identifier, isEmail } = req.body;
+    if (!identifier?.trim()) {
+      return res.status(400).json({ message: "전화번호 또는 이메일을 입력해주세요." });
+    }
+
+    const result = await authService.requestPasswordReset(identifier.trim(), isEmail || false);
+    res.json(result);
+  } catch (error) {
+    logger.error("Request password reset error", error instanceof Error ? error : new Error(String(error)));
+    const message = error instanceof Error ? error.message : "비밀번호 찾기에 실패했습니다.";
+    res.status(500).json({ message });
+  }
+};
+
+// 비밀번호 재설정
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "토큰과 새 비밀번호를 입력해주세요." });
+    }
+
+    const result = await authService.resetPassword(token, newPassword);
+    res.json(result);
+  } catch (error) {
+    logger.error("Reset password error", error instanceof Error ? error : new Error(String(error)));
+    const message = error instanceof Error ? error.message : "비밀번호 재설정에 실패했습니다.";
+    const statusCode = message.includes("유효하지") || message.includes("만료") || message.includes("사용된") ? 400 : 500;
     res.status(statusCode).json({ message });
   }
 };

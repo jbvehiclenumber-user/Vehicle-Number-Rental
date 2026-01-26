@@ -57,6 +57,15 @@ export class UserRepository {
   }
 
   /**
+   * 이메일로 사용자 조회
+   */
+  async findByEmail(email: string): Promise<User | null> {
+    return prisma.user.findUnique({
+      where: { email },
+    });
+  }
+
+  /**
    * ID로 사용자 조회
    */
   async findById(id: string): Promise<User | null> {
@@ -71,14 +80,11 @@ export class UserRepository {
   async create(data: {
     name: string;
     phone: string;
-    email: string | null;
+    email: string;
     password: string;
   }): Promise<User> {
     return prisma.user.create({
-      data: {
-        ...data,
-        email: data.email || null, // 빈 문자열을 null로 변환
-      },
+      data,
     });
   }
 

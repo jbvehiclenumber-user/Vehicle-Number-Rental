@@ -82,6 +82,24 @@ export class CompanyRepository {
   }
 
   /**
+   * 이메일로 회사 조회
+   */
+  async findByEmail(email: string): Promise<Company | null> {
+    return prisma.company.findFirst({
+      where: { email },
+    });
+  }
+
+  /**
+   * 이메일로 모든 회사 조회
+   */
+  async findAllByEmail(email: string): Promise<Company[]> {
+    return prisma.company.findMany({
+      where: { email },
+    });
+  }
+
+  /**
    * ID로 회사 조회
    */
   async findById(id: string): Promise<Company | null> {
@@ -99,7 +117,7 @@ export class CompanyRepository {
     representative: string;
     phone: string;
     contactPhone?: string;
-    email?: string;
+    email: string;
     password: string;
   }): Promise<Company> {
     return prisma.company.create({

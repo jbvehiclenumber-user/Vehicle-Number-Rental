@@ -170,12 +170,16 @@ export class CompanyService {
     }
 
     // 기존 계정의 전화번호, 이메일, 비밀번호 사용하여 새 회사 생성
+    if (!currentCompany.email) {
+      throw new Error("기존 회사에 이메일이 등록되어 있지 않습니다.");
+    }
+    
     const newCompany = await companyRepository.create({
       businessNumber: data.businessNumber,
       companyName: data.companyName,
       representative: data.representative,
       phone: currentCompany.phone, // 기존 전화번호 사용
-      email: currentCompany.email || undefined, // 기존 이메일 사용 (null을 undefined로 변환)
+      email: currentCompany.email, // 기존 이메일 사용 (필수)
       password: currentCompany.password, // 기존 비밀번호 사용
       contactPhone: data.contactPhone,
     });

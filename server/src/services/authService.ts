@@ -18,12 +18,14 @@ export interface RegisterCompanyData {
   companyName: string;
   representative: string;
   phone: string;
-  email?: string;
+  email: string;
   password: string;
+  userId?: string; // 추가된 회사인 경우 기존 사용자 ID
 }
 
 export interface LoginData {
-  phone: string;
+  identifier: string; // 전화번호 또는 이메일
+  isEmail: boolean;
   password: string;
   userType: "user" | "company";
   defaultCompanyId?: string; // 기본 회사 ID (옵션)
@@ -53,7 +55,7 @@ export class AuthService {
     // 전화번호 중복 확인
     const existingUser = await userRepository.findByPhone(data.phone);
     if (existingUser) {
-      throw new Error("이미 등록된 전화번호입니다.");
+      throw new Error("이미 등록된 전화번호입니다. 로그인하시거나 비밀번호 찾기를 이용해주세요.");
     }
 
     // 이메일 중복 확인
@@ -61,7 +63,7 @@ export class AuthService {
       where: { email },
     });
     if (existingUserByEmail) {
-      throw new Error("이미 등록된 이메일입니다.");
+      throw new Error("이미 등록된 이메일입니다. 로그인하시거나 비밀번호 찾기를 이용해주세요.");
     }
 
     // 비밀번호 조건 검증 (8자 이상, 영어와 숫자 포함)
@@ -107,7 +109,7 @@ export class AuthService {
       throw new Error("사용자를 찾을 수 없습니다.");
     }
 
-    const updates: Partial<{ name: string; phone: string; email: string | null; password: string }> = {};
+    const updates: Partial<{ name: string; phone: string; email: string; password: string }> = {};
 
     if (data.name?.trim()) {
       updates.name = data.name.trim();
@@ -121,17 +123,15 @@ export class AuthService {
       updates.phone = data.phone.trim();
     }
 
-    if (data.email !== undefined) {
-      const email = data.email?.trim() || null;
-      if (email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          throw new Error("올바른 이메일 형식이 아닙니다.");
-        }
-        const duplicatedEmail = await prisma.user.findUnique({ where: { email } });
-        if (duplicatedEmail && duplicatedEmail.id !== user.id) {
-          throw new Error("이미 등록된 이메일입니다.");
-        }
+    if (data.email !== undefined && data.email?.trim()) {
+      const email = data.email.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error("올바른 이메일 형식이 아닙니다.");
+      }
+      const duplicatedEmail = await prisma.user.findUnique({ where: { email } });
+      if (duplicatedEmail && duplicatedEmail.id !== user.id) {
+        throw new Error("이미 등록된 이메일입니다.");
       }
       updates.email = email;
     }
@@ -174,9 +174,16 @@ export class AuthService {
       !data.companyName?.trim() ||
       !data.representative?.trim() ||
       !data.phone?.trim() ||
+      !data.email?.trim() ||
       !data.password?.trim()
     ) {
       throw new Error("모든 필드를 입력해주세요.");
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email.trim())) {
+      throw new Error("올바른 이메일 형식이 아닙니다.");
     }
 
     // 사업자등록번호 중복 확인
@@ -238,24 +245,30 @@ export class AuthService {
    * 로그인
    */
   async login(data: LoginData) {
-    logger.info(`로그인 시도: userType=${data.userType}, phone=${data.phone}`);
+    logger.info(`로그인 시도: userType=${data.userType}, identifier=${data.identifier}, isEmail=${data.isEmail}`);
     
     if (data.userType === "user") {
-      // 개인 로그인
-      const user = await userRepository.findByPhone(data.phone);
-      logger.info(`사용자 조회 결과: ${user ? `찾음 (id: ${user.id})` : "찾을 수 없음"}`);
+      // 개인 로그인 - 전화번호 또는 이메일로 조회
+      let user = null;
+      if (data.isEmail) {
+        user = await userRepository.findByEmail(data.identifier);
+        logger.info(`이메일로 사용자 조회 결과: ${user ? `찾음 (id: ${user.id})` : "찾을 수 없음"}`);
+      } else {
+        user = await userRepository.findByPhone(data.identifier);
+        logger.info(`전화번호로 사용자 조회 결과: ${user ? `찾음 (id: ${user.id})` : "찾을 수 없음"}`);
+      }
       
       if (!user) {
-        logger.warn(`사용자를 찾을 수 없음: phone=${data.phone}`);
-        throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
+        logger.warn(`사용자를 찾을 수 없음: identifier=${data.identifier}`);
+        throw new Error("전화번호/이메일 또는 비밀번호가 잘못되었습니다.");
       }
 
       const isPasswordValid = await bcrypt.compare(data.password, user.password);
       logger.info(`비밀번호 검증 결과: ${isPasswordValid ? "성공" : "실패"}`);
       
       if (!isPasswordValid) {
-        logger.warn(`비밀번호 불일치: phone=${data.phone}`);
-        throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
+        logger.warn(`비밀번호 불일치: identifier=${data.identifier}`);
+        throw new Error("전화번호/이메일 또는 비밀번호가 잘못되었습니다.");
       }
 
       // 마지막 로그인 시간 업데이트
@@ -275,13 +288,19 @@ export class AuthService {
         userType: "user" as const,
       };
     } else {
-      // 회사 로그인 - 전화번호로 모든 회사 조회
-      const allCompanies = await companyRepository.findAllByPhone(data.phone);
-      logger.info(`회사 조회 결과: ${allCompanies.length}개 회사 발견`);
+      // 회사 로그인 - 전화번호 또는 이메일로 모든 회사 조회
+      let allCompanies: any[] = [];
+      if (data.isEmail) {
+        allCompanies = await companyRepository.findAllByEmail(data.identifier);
+        logger.info(`이메일로 회사 조회 결과: ${allCompanies.length}개 회사 발견`);
+      } else {
+        allCompanies = await companyRepository.findAllByPhone(data.identifier);
+        logger.info(`전화번호로 회사 조회 결과: ${allCompanies.length}개 회사 발견`);
+      }
       
       if (allCompanies.length === 0) {
-        logger.warn(`회사를 찾을 수 없음: phone=${data.phone}`);
-        throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
+        logger.warn(`회사를 찾을 수 없음: identifier=${data.identifier}`);
+        throw new Error("전화번호/이메일 또는 비밀번호가 잘못되었습니다.");
       }
 
       // 첫 번째 회사로 비밀번호 검증 (모든 회사가 같은 비밀번호 사용)
@@ -293,8 +312,8 @@ export class AuthService {
       logger.info(`비밀번호 검증 결과: ${isPasswordValid ? "성공" : "실패"}`);
       
       if (!isPasswordValid) {
-        logger.warn(`비밀번호 불일치: phone=${data.phone}`);
-        throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
+        logger.warn(`비밀번호 불일치: identifier=${data.identifier}`);
+        throw new Error("전화번호/이메일 또는 비밀번호가 잘못되었습니다.");
       }
 
       // 기본 회사 ID가 있으면 해당 회사로, 없으면 첫 번째 회사로 로그인
@@ -367,19 +386,19 @@ export class AuthService {
     // 새 토큰 생성
     const token = generateToken(company.id, "company");
 
-    return {
-      token,
-      user: {
-        id: company.id,
-        businessNumber: company.businessNumber,
-        companyName: company.companyName,
-        representative: company.representative,
-        phone: company.phone,
-        verified: company.verified,
-        createdAt: company.createdAt,
-      },
-      userType: "company" as const,
-    };
+      return {
+        token,
+        user: {
+          id: company.id,
+          businessNumber: company.businessNumber,
+          companyName: company.companyName,
+          representative: company.representative,
+          phone: company.phone,
+          verified: company.verified,
+          createdAt: company.createdAt,
+        },
+        userType: "company" as const,
+      };
   }
 
   /**
@@ -424,6 +443,128 @@ export class AuthService {
     }
   }
 
+  /**
+   * 비밀번호 찾기 요청 (이메일 또는 전화번호로)
+   */
+  async requestPasswordReset(identifier: string, isEmail: boolean) {
+    let user = null;
+    
+    if (isEmail) {
+      user = await userRepository.findByEmail(identifier);
+    } else {
+      user = await userRepository.findByPhone(identifier);
+    }
+
+    if (!user) {
+      // 보안을 위해 사용자가 존재하지 않아도 성공 메시지 반환
+      return { message: "비밀번호 재설정 링크가 이메일로 전송되었습니다." };
+    }
+
+    // 재설정 토큰 생성 (24시간 유효)
+    const resetToken = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    // 기존 토큰 삭제 (사용자가 여러 번 요청한 경우)
+    await prisma.passwordReset.deleteMany({
+      where: { userId: user.id, used: false },
+    });
+
+    // 새 토큰 저장
+    await prisma.passwordReset.create({
+      data: {
+        userId: user.id,
+        token: resetToken,
+        expiresAt,
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL?.split(",")[0] || "http://localhost:3000";
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+    
+    // 이메일 전송 시도
+    try {
+      const { sendPasswordResetEmail, isEmailServiceAvailable } = await import("./emailService");
+      
+      if (isEmailServiceAvailable()) {
+        await sendPasswordResetEmail({
+          email: user.email,
+          resetToken,
+          userName: user.name,
+        });
+        logger.info(`Password reset email sent to user: ${user.id}, email: ${user.email}`);
+      } else {
+        logger.warn("Email service not configured. RESEND_API_KEY not set. Token will be returned in response.");
+      }
+    } catch (error) {
+      // 이메일 전송 실패해도 토큰은 반환 (개발 환경 대비)
+      logger.error("Failed to send password reset email, but token generated", error instanceof Error ? error : new Error(String(error)), {
+        user_id: user.id,
+        email: user.email,
+      });
+    }
+    
+    logger.info(`Password reset token generated for user: ${user.id}, email: ${user.email}`, {
+      token: resetToken,
+      reset_url: resetUrl,
+    });
+
+    // 개발 환경이거나 이메일 서비스가 설정되지 않은 경우 토큰 반환
+    // 프로덕션에서는 이메일 전송 성공 시 토큰 반환 제거 가능
+    const shouldReturnToken = process.env.NODE_ENV === "development" || !process.env.RESEND_API_KEY;
+    
+    return { 
+      message: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
+      ...(shouldReturnToken && { token: resetToken, resetUrl: resetUrl }),
+    };
+  }
+
+  /**
+   * 비밀번호 재설정 (토큰으로)
+   */
+  async resetPassword(token: string, newPassword: string) {
+    // 토큰으로 재설정 요청 찾기
+    const resetRequest = await prisma.passwordReset.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!resetRequest) {
+      throw new Error("유효하지 않은 재설정 링크입니다.");
+    }
+
+    if (resetRequest.used) {
+      throw new Error("이미 사용된 재설정 링크입니다.");
+    }
+
+    if (resetRequest.expiresAt < new Date()) {
+      throw new Error("만료된 재설정 링크입니다. 다시 요청해주세요.");
+    }
+
+    // 비밀번호 조건 검증
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      throw new Error("비밀번호는 8자 이상이며 영어와 숫자를 포함해야 합니다.");
+    }
+
+    // 새 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 비밀번호 업데이트
+    await userRepository.update(resetRequest.userId, {
+      password: hashedPassword,
+    });
+
+    // 토큰 사용 처리
+    await prisma.passwordReset.update({
+      where: { id: resetRequest.id },
+      data: { used: true },
+    });
+
+    logger.info(`Password reset completed for user: ${resetRequest.userId}`);
+
+    return { message: "비밀번호가 성공적으로 변경되었습니다." };
+  }
 }
 
 export const authService = new AuthService();

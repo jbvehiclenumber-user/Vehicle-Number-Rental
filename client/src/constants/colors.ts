@@ -6,7 +6,7 @@ export const COLORS = {
     hover: '#002a4f',        // 호버 시 사용하는 약간 밝은 딥 네이비
     light: '#e6f0f8',       // 연한 배경색
     text: '#001f3f',         // 텍스트 색상
-    overlay: 'rgba(0, 31, 63, 0.3)',  // 반투명 오버레이
+    overlay: 'rgba(0, 31, 63, 0.5)',  // 반투명 오버레이
   },
 } as const;
 

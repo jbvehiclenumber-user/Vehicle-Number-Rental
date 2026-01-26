@@ -71,6 +71,7 @@ async function main() {
       create: {
         name: "김기사",
         phone: "010-1111-2222",
+        email: "kim@example.com",
         password: hashedPassword,
         verified: true,
         verifiedAt: new Date(),
@@ -82,6 +83,7 @@ async function main() {
       create: {
         name: "이기사",
         phone: "010-2222-3333",
+        email: "lee@example.com",
         password: hashedPassword,
         verified: true,
         verifiedAt: new Date(),
@@ -93,6 +95,7 @@ async function main() {
       create: {
         name: "박기사",
         phone: "010-3333-4444",
+        email: "park@example.com",
         password: hashedPassword,
         verified: false, // 인증되지 않은 기사 예시
       },
@@ -103,6 +106,7 @@ async function main() {
       create: {
         name: "최기사",
         phone: "010-4444-5555",
+        email: "choi@example.com",
         password: hashedPassword,
         verified: true,
         verifiedAt: new Date(),

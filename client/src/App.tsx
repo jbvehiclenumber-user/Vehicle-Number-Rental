@@ -7,6 +7,11 @@ import { useAuthStore } from "./stores/authStore";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+import KakaoCallbackPage from "./pages/KakaoCallbackPage";
+import GoogleCallbackPage from "./pages/GoogleCallbackPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import DriverDashboard from "./pages/DriverDashboard";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
@@ -51,6 +56,11 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/oauth/kakao/callback" element={<KakaoCallbackPage />} />
+        <Route path="/oauth/google/callback" element={<GoogleCallbackPage />} />
 
         {/* Profile */}
         <Route

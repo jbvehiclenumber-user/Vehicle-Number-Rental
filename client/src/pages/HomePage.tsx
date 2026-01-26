@@ -60,7 +60,7 @@ const HomePage: React.FC = () => {
 
       {/* Hero Section */}
       <section 
-        className="relative text-white py-60 bg-cover bg-center bg-no-repeat overflow-hidden"
+        className="relative text-white py-60 bg-cover bg-no-repeat overflow-hidden hero-background"
         style={{
           backgroundImage: `url(${process.env.PUBLIC_URL || ''}/truck-background.jpg)`,
           backgroundColor: '#1e3a8a', // fallback 배경색
@@ -78,7 +78,7 @@ const HomePage: React.FC = () => {
             영업용 차량 번호 임대 중개 플랫폼
           </h2>
           <p className="text-xl md:text-2xl mb-8 text-gray-200 animate-fadeInUp stagger-1" style={{ animationDelay: '0.2s' }}>
-            영업용 차량 번호를 투명하게 거래하세요
+          대한민국 영업용 번호판 거래의 새로운 기준, <strong>넘버링크</strong>
           </p>
           <button
             onClick={handleGetStarted}
@@ -125,7 +125,7 @@ const HomePage: React.FC = () => {
             </div>
             <div className="flex-1">
               <p className="text-lg mb-3 leading-relaxed">
-                JUNGBU는 영업용 차량 번호를 투명하게 연결하는 중개 플랫폼으로, 소유주와 구매자 간의 신뢰를 바탕으로 합리적인 거래를 돕습니다.
+                넘버링크는 영업용 차량 번호를 투명하게 연결하는 중개 플랫폼으로, 소유주와 구매자 간의 신뢰를 바탕으로 합리적인 거래를 돕습니다.
               </p>
               <p className="text-lg leading-relaxed text-gray-200">
                 저희 플랫폼은 복잡한 절차를 간소화하고, 실시간 매물 공유와 중개인 매칭을 통해 시간과 비용을 절약해 드립니다.
@@ -198,7 +198,7 @@ const HomePage: React.FC = () => {
               <h3 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'white' }}>
                 회사 소개
               </h3>
-              <a
+              {/* <a
                 href="https://jungbulogis.co.kr/"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -206,14 +206,14 @@ const HomePage: React.FC = () => {
                 style={{ color: COLORS.navy.primary }}
               >
                 자세히 보기
-              </a>
+              </a> */}
             </div>
             <div 
               className={`flex-1 md:pl-8 flex items-center section-hidden ${visibleSections.has('company') ? 'section-visible' : ''}`}
               style={{ transitionDelay: '0.2s' }}
             >
               <p className="text-lg leading-relaxed text-gray-200">
-                (주)중부화물은 디지털 물류 비전기업으로서 영업용 번호 중개 사업의 파트너와 고객 모두의 이익을 최우선에 두고 해당 플랫폼을 개발하였습니다.
+                에스에이치물류는 디지털 물류 비전기업으로서 영업용 번호 중개 사업의 파트너와 고객 모두의 이익을 최우선에 두고 해당 플랫폼을 개발하였습니다.
               </p>
             </div>
           </div>
@@ -281,7 +281,7 @@ const HomePage: React.FC = () => {
         data-section-id="footer"
       >
         <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center section-hidden ${visibleSections.has('footer') ? 'section-visible' : ''}`}>
-          <p>&copy; 2025 JUNGBU. All rights reserved.</p>
+          <p>&copy; 2025 에스에이치물류. All rights reserved.</p>
         </div>
       </footer>
     </div>
