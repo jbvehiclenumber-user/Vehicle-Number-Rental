@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuthStore } from "../stores/authStore";
 import { authService } from "../services/authService";
@@ -7,7 +7,8 @@ import { COLORS } from "../constants/colors";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { userType, token, setAuth } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const { userType, token, setAuth, companies, user } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +36,25 @@ const ProfilePage: React.FC = () => {
   });
   const [showCompanyCurrentPassword, setShowCompanyCurrentPassword] = useState(false);
   const [showCompanyNewPassword, setShowCompanyNewPassword] = useState(false);
+
+  // 회사 추가 폼
+  const [showAddCompanyForm, setShowAddCompanyForm] = useState(false);
+  const [newCompanyForm, setNewCompanyForm] = useState({
+    businessNumber: "",
+    companyName: "",
+    representative: "",
+    contactPhone: "",
+  });
+  const [businessVerified, setBusinessVerified] = useState(false);
+
+  // URL 파라미터에서 addCompany 확인
+  useEffect(() => {
+    if (searchParams.get("addCompany") === "true" && userType === "company") {
+      setShowAddCompanyForm(true);
+      // URL에서 파라미터 제거
+      navigate("/profile", { replace: true });
+    }
+  }, [searchParams, userType, navigate]);
 
   useEffect(() => {
     const load = async () => {
@@ -114,12 +134,90 @@ const ProfilePage: React.FC = () => {
         newPassword: newPassword || undefined,
       });
       if (token) {
-        setAuth(token, updated, "company");
+        setAuth(token, updated, "company", companies);
       }
       setCompanyForm((prev) => ({ ...prev, currentPassword: "", newPassword: "" }));
       setSuccess("회사 정보가 저장되었습니다.");
     } catch (err: any) {
       setError(err.response?.data?.message || "저장에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 사업자등록번호 인증
+  const handleVerifyBusiness = async () => {
+    if (!newCompanyForm.businessNumber) {
+      setError("사업자등록번호를 입력하세요.");
+      return;
+    }
+
+    setError("");
+    setBusinessVerified(false);
+
+    try {
+      const result = await authService.verifyBusinessNumber(newCompanyForm.businessNumber);
+      if (result.valid) {
+        setBusinessVerified(true);
+        setError("");
+      } else {
+        setError(result.message || "사업자등록번호 인증에 실패했습니다.");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "인증에 실패했습니다.");
+    }
+  };
+
+  // 새 회사 추가 (기존 계정 정보 사용)
+  const handleAddCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!businessVerified) {
+      setError("사업자등록번호 인증이 필요합니다.");
+      return;
+    }
+
+    if (
+      !newCompanyForm.businessNumber.trim() ||
+      !newCompanyForm.companyName.trim() ||
+      !newCompanyForm.representative.trim()
+    ) {
+      setError("사업자등록번호, 회사명, 대표자명을 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      // 기존 계정 정보를 사용하여 새 회사 추가
+      const newCompany = await authService.addCompany({
+        businessNumber: newCompanyForm.businessNumber,
+        companyName: newCompanyForm.companyName,
+        representative: newCompanyForm.representative,
+        contactPhone: newCompanyForm.contactPhone || undefined,
+      });
+
+      // 새 회사 정보를 회사 목록에 추가
+      const updatedCompanies = companies ? [...companies, newCompany as any] : [newCompany as any];
+      
+      // 회사 목록만 업데이트 (현재 회사는 유지)
+      if (user && token) {
+        setAuth(token, user, "company", updatedCompanies);
+      }
+
+      setSuccess("새 회사가 추가되었습니다. 회사 선택 드롭다운에서 전환할 수 있습니다.");
+      setShowAddCompanyForm(false);
+      setNewCompanyForm({
+        businessNumber: "",
+        companyName: "",
+        representative: "",
+        contactPhone: "",
+      });
+      setBusinessVerified(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "회사 추가에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -503,12 +601,139 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">{error}</div>}
-        {success && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">{success}</div>}
+        {success && <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">{success}</div>}
 
-        {isLoading ? (
+        {isLoading && !showAddCompanyForm ? (
           <div className="text-gray-600">불러오는 중...</div>
         ) : userType === "company" ? (
-          renderCompanyForm()
+          <>
+            {!showAddCompanyForm ? (
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">현재 회사 정보</h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCompanyForm(true)}
+                    className="px-4 py-2 text-white rounded-md transition text-sm"
+                    style={{ backgroundColor: COLORS.navy.primary }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.hover)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = COLORS.navy.primary)}
+                  >
+                    + 새 회사 추가
+                  </button>
+                </div>
+                {renderCompanyForm()}
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-900">새 회사 추가</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddCompanyForm(false);
+                      setNewCompanyForm({
+                        businessNumber: "",
+                        companyName: "",
+                        representative: "",
+                        contactPhone: "",
+                      });
+                      setBusinessVerified(false);
+                      setError("");
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    취소
+                  </button>
+                </div>
+                <form onSubmit={handleAddCompany} className="space-y-4 bg-white p-6 rounded-lg shadow">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      사업자등록번호 *
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newCompanyForm.businessNumber}
+                        onChange={(e) => {
+                          setNewCompanyForm({ ...newCompanyForm, businessNumber: e.target.value });
+                          setBusinessVerified(false);
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="123-45-67890"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyBusiness}
+                        disabled={businessVerified || !newCompanyForm.businessNumber}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {businessVerified ? "인증완료" : "인증"}
+                      </button>
+                    </div>
+                    {businessVerified && (
+                      <p className="mt-1 text-xs text-blue-600">✓ 사업자등록번호가 인증되었습니다.</p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">회사명 *</label>
+                      <input
+                        type="text"
+                        value={newCompanyForm.companyName}
+                        onChange={(e) => setNewCompanyForm({ ...newCompanyForm, companyName: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">대표자명 *</label>
+                      <input
+                        type="text"
+                        value={newCompanyForm.representative}
+                        onChange={(e) => setNewCompanyForm({ ...newCompanyForm, representative: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>기존 계정 정보 사용:</strong> 전화번호, 이메일, 비밀번호는 현재 계정의 정보를 그대로 사용합니다.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">연락받을 번호</label>
+                    <input
+                      type="tel"
+                      value={newCompanyForm.contactPhone}
+                      onChange={(e) => setNewCompanyForm({ ...newCompanyForm, contactPhone: e.target.value })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="기사들이 연락할 수 있는 번호"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">결제 후 기사들이 연락할 수 있는 번호입니다.</p>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !businessVerified}
+                    className="w-full py-3 px-4 text-white rounded-md transition disabled:opacity-50"
+                    style={{ backgroundColor: COLORS.navy.primary }}
+                    onMouseEnter={(e) => {
+                      if (!e.currentTarget.disabled) {
+                        e.currentTarget.style.backgroundColor = COLORS.navy.hover;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.navy.primary;
+                    }}
+                  >
+                    {isLoading ? "추가 중..." : "회사 추가"}
+                  </button>
+                </form>
+              </div>
+            )}
+          </>
         ) : (
           renderUserForm()
         )}

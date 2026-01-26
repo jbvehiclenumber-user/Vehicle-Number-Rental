@@ -137,6 +137,64 @@ export class CompanyService {
       updatedAt: updatedCompany.updatedAt,
     };
   }
+
+  /**
+   * 기존 계정 정보를 사용하여 새 회사 추가
+   */
+  async addCompanyWithExistingAccount(
+    currentCompanyId: string,
+    data: {
+      businessNumber: string;
+      companyName: string;
+      representative: string;
+      contactPhone?: string;
+    }
+  ) {
+    // 현재 회사 정보 가져오기
+    const currentCompany = await companyRepository.findById(currentCompanyId);
+    if (!currentCompany) {
+      throw new Error("현재 회사 정보를 찾을 수 없습니다.");
+    }
+
+    // 사업자등록번호 중복 확인
+    const existingCompany = await companyRepository.findByBusinessNumber(data.businessNumber);
+    if (existingCompany) {
+      throw new Error("이미 등록된 사업자등록번호입니다.");
+    }
+
+    // 사업자등록번호 인증 확인
+    const { isBusinessNumberVerified } = await import("../services/businessNumberService");
+    const isVerified = isBusinessNumberVerified(data.businessNumber);
+    if (!isVerified) {
+      throw new Error("사업자등록번호 인증이 필요합니다. 먼저 인증을 완료해주세요.");
+    }
+
+    // 기존 계정의 전화번호, 이메일, 비밀번호 사용하여 새 회사 생성
+    const newCompany = await companyRepository.create({
+      businessNumber: data.businessNumber,
+      companyName: data.companyName,
+      representative: data.representative,
+      phone: currentCompany.phone, // 기존 전화번호 사용
+      email: currentCompany.email || undefined, // 기존 이메일 사용 (null을 undefined로 변환)
+      password: currentCompany.password, // 기존 비밀번호 사용
+      contactPhone: data.contactPhone,
+    });
+
+    // 인증 상태 업데이트
+    await companyRepository.updateVerification(newCompany.id, true);
+
+    return {
+      id: newCompany.id,
+      businessNumber: newCompany.businessNumber,
+      companyName: newCompany.companyName,
+      representative: newCompany.representative,
+      phone: newCompany.phone,
+      email: newCompany.email,
+      contactPhone: newCompany.contactPhone,
+      verified: true,
+      createdAt: newCompany.createdAt,
+    };
+  }
 }
 
 export const companyService = new CompanyService();

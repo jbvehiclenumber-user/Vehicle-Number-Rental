@@ -123,3 +123,29 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     res.status(statusCode).json({ message });
   }
 };
+
+// 회사 전환
+export const switchCompany = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== "company") {
+      return res.status(403).json({ message: "회사 사용자만 전환할 수 있습니다." });
+    }
+
+    const { companyId, password } = req.body;
+    if (!companyId || !password) {
+      return res.status(400).json({ message: "회사 ID와 비밀번호를 입력해주세요." });
+    }
+
+    // 현재 사용자의 전화번호 가져오기
+    const currentUser = await authService.getCurrentUser(req.user.userId, "company");
+    const phone = currentUser.user.phone;
+
+    const result = await authService.switchCompany(phone, companyId, password);
+    res.json(result);
+  } catch (error) {
+    logger.error("Switch company error", error instanceof Error ? error : new Error(String(error)));
+    const message = error instanceof Error ? error.message : "회사 전환에 실패했습니다.";
+    const statusCode = message.includes("비밀번호") || message.includes("권한") ? 401 : message.includes("찾을 수 없습니다") ? 404 : 500;
+    res.status(statusCode).json({ message });
+  }
+};

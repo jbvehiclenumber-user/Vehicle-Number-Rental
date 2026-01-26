@@ -26,6 +26,7 @@ export interface LoginData {
   phone: string;
   password: string;
   userType: "user" | "company";
+  defaultCompanyId?: string; // 기본 회사 ID (옵션)
 }
 
 export class AuthService {
@@ -274,18 +275,20 @@ export class AuthService {
         userType: "user" as const,
       };
     } else {
-      // 회사 로그인
-      const company = await companyRepository.findByPhone(data.phone);
-      logger.info(`회사 조회 결과: ${company ? `찾음 (id: ${company.id}, businessNumber: ${company.businessNumber})` : "찾을 수 없음"}`);
+      // 회사 로그인 - 전화번호로 모든 회사 조회
+      const allCompanies = await companyRepository.findAllByPhone(data.phone);
+      logger.info(`회사 조회 결과: ${allCompanies.length}개 회사 발견`);
       
-      if (!company) {
+      if (allCompanies.length === 0) {
         logger.warn(`회사를 찾을 수 없음: phone=${data.phone}`);
         throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
       }
 
+      // 첫 번째 회사로 비밀번호 검증 (모든 회사가 같은 비밀번호 사용)
+      const firstCompany = allCompanies[0];
       const isPasswordValid = await bcrypt.compare(
         data.password,
-        company.password
+        firstCompany.password
       );
       logger.info(`비밀번호 검증 결과: ${isPasswordValid ? "성공" : "실패"}`);
       
@@ -294,22 +297,89 @@ export class AuthService {
         throw new Error("전화번호 또는 비밀번호가 잘못되었습니다.");
       }
 
-      const token = generateToken(company.id, "company");
+      // 기본 회사 ID가 있으면 해당 회사로, 없으면 첫 번째 회사로 로그인
+      let targetCompany = firstCompany;
+      if (data.defaultCompanyId) {
+        const defaultCompany = allCompanies.find(c => c.id === data.defaultCompanyId);
+        if (defaultCompany) {
+          targetCompany = defaultCompany;
+          logger.info(`기본 회사로 로그인: ${targetCompany.companyName} (${targetCompany.id})`);
+        } else {
+          logger.warn(`기본 회사 ID를 찾을 수 없음: ${data.defaultCompanyId}, 첫 번째 회사로 로그인`);
+        }
+      }
+
+      const token = generateToken(targetCompany.id, "company");
+
+      // 모든 회사 목록 반환 (비밀번호 제외)
+      const companiesList = allCompanies.map((company) => ({
+        id: company.id,
+        businessNumber: company.businessNumber,
+        companyName: company.companyName,
+        representative: company.representative,
+        phone: company.phone,
+        verified: company.verified,
+        createdAt: company.createdAt,
+      }));
 
       return {
         token,
         user: {
-          id: company.id,
-          businessNumber: company.businessNumber,
-          companyName: company.companyName,
-          representative: company.representative,
-          phone: company.phone,
-          verified: company.verified,
-          createdAt: company.createdAt,
+          id: targetCompany.id,
+          businessNumber: targetCompany.businessNumber,
+          companyName: targetCompany.companyName,
+          representative: targetCompany.representative,
+          phone: targetCompany.phone,
+          verified: targetCompany.verified,
+          createdAt: targetCompany.createdAt,
         },
         userType: "company" as const,
+        companies: companiesList, // 모든 회사 목록
       };
     }
+  }
+
+  /**
+   * 회사 전환 (비밀번호 확인 후 다른 회사로 전환)
+   */
+  async switchCompany(phone: string, companyId: string, password: string) {
+    logger.info(`회사 전환 시도: phone=${phone}, companyId=${companyId}`);
+    
+    // 회사 조회
+    const company = await companyRepository.findById(companyId);
+    if (!company) {
+      throw new Error("회사를 찾을 수 없습니다.");
+    }
+
+    // 전화번호 일치 확인
+    const normalizedInput = companyRepository.normalizePhone(phone);
+    const normalizedCompanyPhone = companyRepository.normalizePhone(company.phone);
+    if (normalizedInput !== normalizedCompanyPhone) {
+      throw new Error("해당 회사에 대한 권한이 없습니다.");
+    }
+
+    // 비밀번호 확인
+    const isPasswordValid = await bcrypt.compare(password, company.password);
+    if (!isPasswordValid) {
+      throw new Error("비밀번호가 올바르지 않습니다.");
+    }
+
+    // 새 토큰 생성
+    const token = generateToken(company.id, "company");
+
+    return {
+      token,
+      user: {
+        id: company.id,
+        businessNumber: company.businessNumber,
+        companyName: company.companyName,
+        representative: company.representative,
+        phone: company.phone,
+        verified: company.verified,
+        createdAt: company.createdAt,
+      },
+      userType: "company" as const,
+    };
   }
 
   /**

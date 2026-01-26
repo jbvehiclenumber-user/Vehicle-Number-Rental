@@ -27,4 +27,5 @@ export interface AuthResponse {
   token: string;
   user: User | Company;
   userType: UserType;
+  companies?: Company[]; // 회사 로그인 시 소유한 모든 회사 목록
 }

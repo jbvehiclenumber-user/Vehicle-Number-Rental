@@ -7,6 +7,7 @@ import {
   verifyBusinessNumber,
   getCurrentUser,
   updateUserProfile,
+  switchCompany,
 } from "../controllers/authController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
@@ -23,5 +24,8 @@ router.post("/verify-business", verifyBusinessNumber);
 // 사용자 정보
 router.get("/me", authMiddleware, getCurrentUser);
 router.put("/profile", authMiddleware, updateUserProfile);
+
+// 회사 전환
+router.post("/switch-company", authMiddleware, switchCompany);
 
 export default router;

@@ -1,6 +1,6 @@
 // src/pages/SignupPage.tsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { authService } from "../services/authService";
 import Header from "../components/Header";
@@ -8,9 +8,13 @@ import { COLORS } from "../constants/colors";
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, companies, isAuthenticated, userType: currentUserType } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const typeParam = searchParams.get("type");
 
-  const [userType, setUserType] = useState<"user" | "company">("user");
+  const [userType, setUserType] = useState<"user" | "company">(
+    typeParam === "company" ? "company" : "user"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -186,7 +190,16 @@ const SignupPage: React.FC = () => {
         password: companyData.password,
       });
 
-      setAuth(response.token, response.user, response.userType);
+      // 이미 로그인된 상태에서 회사를 추가하는 경우
+      if (isAuthenticated && currentUserType === "company" && companies) {
+        // 기존 회사 목록에 새 회사 추가
+        const updatedCompanies = [...companies, response.user as any];
+        setAuth(response.token, response.user, response.userType, updatedCompanies);
+      } else {
+        // 새로 회원가입하는 경우
+        setAuth(response.token, response.user, response.userType);
+      }
+      
       // 회원가입 성공 후 연락받을 번호 입력 모달 표시
       setShowContactPhoneModal(true);
     } catch (err: any) {
@@ -427,7 +440,7 @@ const SignupPage: React.FC = () => {
                   type="button"
                   onClick={handleVerifyBusiness}
                   disabled={businessVerified}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
                   {businessVerified ? "인증완료" : "인증"}
                 </button>

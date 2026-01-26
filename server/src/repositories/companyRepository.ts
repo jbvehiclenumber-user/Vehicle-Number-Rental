@@ -6,7 +6,7 @@ export class CompanyRepository {
   /**
    * 전화번호 정규화 (하이픈 제거)
    */
-  private normalizePhone(phone: string): string {
+  normalizePhone(phone: string): string {
     return phone.replace(/-/g, "");
   }
 
@@ -66,6 +66,22 @@ export class CompanyRepository {
   }
 
   /**
+   * 전화번호로 모든 회사 조회 (하이픈 포함/미포함 모두 지원)
+   */
+  async findAllByPhone(phone: string): Promise<Company[]> {
+    const normalizedInput = this.normalizePhone(phone);
+    const formattedPhone = this.formatPhone(normalizedInput);
+    
+    // 모든 회사를 가져와서 정규화된 전화번호로 필터링
+    const allCompanies = await prisma.company.findMany();
+    const matchedCompanies = allCompanies.filter(
+      (company) => this.normalizePhone(company.phone) === normalizedInput
+    );
+    
+    return matchedCompanies;
+  }
+
+  /**
    * ID로 회사 조회
    */
   async findById(id: string): Promise<Company | null> {
@@ -87,7 +103,15 @@ export class CompanyRepository {
     password: string;
   }): Promise<Company> {
     return prisma.company.create({
-      data,
+      data: {
+        businessNumber: data.businessNumber,
+        companyName: data.companyName,
+        representative: data.representative,
+        phone: data.phone,
+        contactPhone: data.contactPhone || undefined,
+        email: data.email || undefined,
+        password: data.password,
+      } as any,
     });
   }
 
