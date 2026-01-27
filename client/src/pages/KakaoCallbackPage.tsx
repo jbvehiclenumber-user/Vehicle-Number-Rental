@@ -34,22 +34,14 @@ const KakaoCallbackPage: React.FC = () => {
       
       // 서버의 카카오 콜백 API 호출
       // 인증 코드는 매번 새로 생성되며, 일회용이므로 즉시 서버로 전달
-      // 배포 환경에서 API URL 자동 감지
-      let API_BASE_URL = process.env.REACT_APP_API_URL;
+      // api.ts와 동일한 방식으로 API URL 가져오기
+      const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001/api";
       
-      // 환경 변수가 없으면 현재 도메인 기반으로 추정
-      if (!API_BASE_URL) {
+      // 배포 환경에서 환경 변수가 없으면 경고
+      if (!process.env.REACT_APP_API_URL) {
         const isProduction = window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
         if (isProduction) {
-          // 배포 환경: 서버가 별도 도메인에 있다면 환경 변수 필수
-          // 같은 도메인이라면 /api 사용 가능
-          console.error("REACT_APP_API_URL이 설정되지 않았습니다. 배포 환경 변수를 확인하세요.");
-          hasProcessed.current = true;
-          navigate("/login?error=서버 설정 오류가 발생했습니다. 관리자에게 문의하세요.");
-          return;
-        } else {
-          // 개발 환경
-          API_BASE_URL = "http://localhost:3001/api";
+          console.warn("REACT_APP_API_URL이 설정되지 않았습니다. 기본값을 사용합니다:", API_BASE_URL);
         }
       }
       
