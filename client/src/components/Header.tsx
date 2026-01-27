@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#111827')}
           >
-           SH
+           에스에이치
           </button>
           <div className="flex items-center gap-4">
             {!isAuthenticated ? (
