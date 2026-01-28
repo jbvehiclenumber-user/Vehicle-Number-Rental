@@ -255,13 +255,17 @@ const LoginPage: React.FC = () => {
                 value={loginIdentifier}
                 onChange={(e) => {
                   const value = e.target.value;
-                  // 이메일 형식이면 그대로, 전화번호 형식이면 포맷팅
-                  if (checkIfEmail(value)) {
+                  // 영문자/@/점이 포함되면 이메일 입력으로 간주하고 그대로 입력
+                  // 그렇지 않고 숫자/하이픈만 있으면 전화번호로 간주하여 포맷팅
+                  const hasEmailChars = /[a-zA-Z@.]/.test(value);
+                  if (hasEmailChars) {
                     setLoginIdentifier(value);
-                  } else {
-                    const formatted = formatPhone(value);
-                    setLoginIdentifier(formatted);
+                    return;
                   }
+
+                  // 이메일 특성이 없으면 전화번호로 처리
+                  const formatted = formatPhone(value);
+                  setLoginIdentifier(formatted);
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
                 style={{
