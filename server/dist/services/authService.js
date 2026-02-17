@@ -441,6 +441,7 @@ class AuthService {
         });
         const frontendUrl = process.env.FRONTEND_URL?.split(",")[0] || "http://localhost:3000";
         const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+        const isDevEnv = process.env.NODE_ENV !== "production";
         // 이메일 전송 시도
         try {
             const { sendPasswordResetEmail, isEmailServiceAvailable } = await Promise.resolve().then(() => __importStar(require("./emailService")));
@@ -453,7 +454,7 @@ class AuthService {
                 logger_1.logger.info(`Password reset email sent to user: ${user.id}, email: ${user.email}`);
             }
             else {
-                logger_1.logger.warn("Email service not configured. RESEND_API_KEY not set. Token will be returned in response.");
+                logger_1.logger.warn("Email service not configured. RESEND_API_KEY not set.");
             }
         }
         catch (error) {
@@ -464,6 +465,14 @@ class AuthService {
             });
         }
         logger_1.logger.info(`Password reset token generated for user: ${user.id}, email: ${user.email}`);
+        // 개발 환경에서는 이메일이 오지 않아도 디버깅을 위해 토큰/링크를 함께 반환
+        if (isDevEnv) {
+            return {
+                message: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
+                token: resetToken,
+                resetUrl,
+            };
+        }
         return {
             message: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
         };
