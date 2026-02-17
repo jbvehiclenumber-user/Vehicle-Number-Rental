@@ -25,7 +25,7 @@ Resend는 개발자 친화적인 이메일 API 서비스로, 무료 티어를 �
 4. API 키 이름 입력 (예: "Vehicle-Number-Rental")
 5. 권한 선택 (기본적으로 "Sending access" 선택)
 6. 생성된 API 키를 복사 (한 번만 표시되므로 안전하게 보관)
-
+re_5foYXgoZ_5My7viryHtmnoRR2WrtdZJr3
 ### 3. 도메인 설정 (선택사항)
 
 **프로덕션 환경에서는 도메인을 설정하는 것을 강력히 권장합니다.**
@@ -46,7 +46,7 @@ Resend는 개발자 친화적인 이메일 API 서비스로, 무료 티어를 �
 
 ```env
 # Resend API 키
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_API_KEY=re_5foYXgoZ_5My7viryHtmnoRR2WrtdZJr3xx
 
 # 발신 이메일 주소 (도메인 설정 시)
 EMAIL_FROM=noreply@yourdomain.com
