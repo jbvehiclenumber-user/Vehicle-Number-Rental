@@ -11,6 +11,7 @@ const ForgotPasswordPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [resetInfo, setResetInfo] = useState<{ emailSent?: boolean; resetUrl?: string } | null>(null);
 
   const checkIfEmail = (value: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,11 +24,12 @@ const ForgotPasswordPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await authService.requestPasswordReset(
+      const result = await authService.requestPasswordReset(
         identifier.trim(),
         isEmail
       );
 
+      setResetInfo({ emailSent: (result as any).emailSent, resetUrl: (result as any).resetUrl });
       setSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || "비밀번호 찾기에 실패했습니다.");
@@ -49,19 +51,32 @@ const ForgotPasswordPage: React.FC = () => {
             이메일을 확인해주세요.
           </p>
 
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-800">
-              ✅ <strong>이메일이 전송되었습니다!</strong>
-              <br />
-              입력하신 이메일 주소로 비밀번호 재설정 링크를 보냈습니다.
-              <br />
-              이메일을 확인하시고 링크를 클릭하여 비밀번호를 재설정하세요.
-              <br />
-              <span className="text-xs text-green-700 mt-2 block">
-                (이메일이 보이지 않으면 스팸함도 확인해주세요)
-              </span>
-            </p>
-          </div>
+          {resetInfo?.emailSent !== false ? (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-800">
+                ✅ <strong>이메일이 전송되었습니다!</strong>
+                <br />
+                입력하신 이메일 주소로 비밀번호 재설정 링크를 보냈습니다.
+                <br />
+                이메일을 확인하시고 링크를 클릭하여 비밀번호를 재설정하세요.
+                <br />
+                <span className="text-xs text-green-700 mt-2 block">
+                  (이메일이 보이지 않으면 스팸함도 확인해주세요)
+                </span>
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                이메일 전송에 실패했습니다. (개발/설정 문제일 수 있습니다)
+              </p>
+              {resetInfo?.resetUrl && (
+                <p className="text-xs text-yellow-900 mt-2 break-all">
+                  재설정 링크: {resetInfo.resetUrl}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="mt-6">
             <button

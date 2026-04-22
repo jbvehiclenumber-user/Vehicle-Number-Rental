@@ -83,24 +83,10 @@ function App() {
         />
 
         {/* Protected Routes - User (Driver) */}
-        <Route
-          path="/driver/dashboard"
-          element={
-            <ProtectedRoute requiredUserType="user">
-              <DriverDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/driver/dashboard" element={<DriverDashboard />} />
 
-        {/* Protected Routes - Both */}
-        <Route
-          path="/vehicle/:id"
-          element={
-            <ProtectedRoute>
-              <VehicleDetailPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Vehicle detail is public; contact is gated inside page/API */}
+        <Route path="/vehicle/:id" element={<VehicleDetailPage />} />
 
         {/* Payment Routes */}
         <Route path="/payment/success" element={<PaymentSuccessPage />} />

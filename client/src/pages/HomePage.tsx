@@ -43,15 +43,8 @@ const HomePage: React.FC = () => {
   }, []);
 
   const handleGetStarted = () => {
-    if (isAuthenticated) {
-      if (userType === "company") {
-        navigate("/company/dashboard");
-      } else {
-        navigate("/driver/dashboard");
-      }
-    } else {
-      navigate("/signup");
-    }
+    // 시작하기: 차량 번호(목록) 페이지로 이동
+    navigate("/driver/dashboard");
   };
 
   return (

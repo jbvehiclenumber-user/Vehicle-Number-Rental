@@ -455,14 +455,19 @@ class AuthService {
             }
             else {
                 logger_1.logger.warn("Email service not configured. RESEND_API_KEY not set.");
+                if (!isDevEnv) {
+                    throw new Error("이메일 서비스가 설정되지 않았습니다.");
+                }
             }
         }
         catch (error) {
-            // 이메일 전송 실패해도 토큰은 반환 (개발 환경 대비)
             logger_1.logger.error("Failed to send password reset email, but token generated", error instanceof Error ? error : new Error(String(error)), {
                 user_id: user.id,
                 email: user.email,
             });
+            if (!isDevEnv) {
+                throw new Error("이메일 전송에 실패했습니다.");
+            }
         }
         logger_1.logger.info(`Password reset token generated for user: ${user.id}, email: ${user.email}`);
         // 개발 환경에서는 이메일이 오지 않아도 디버깅을 위해 토큰/링크를 함께 반환

@@ -14,7 +14,7 @@ export interface Vehicle {
   updatedAt: string;
   company?: {
     companyName: string;
-    phone: string;
+    phone?: string;
     contactPhone?: string;
   };
 }

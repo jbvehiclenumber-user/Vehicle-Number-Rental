@@ -472,18 +472,6 @@ const SignupPage: React.FC = () => {
             >
               {isLoading ? "가입 중..." : "회원가입"}
             </button>
-
-            <div className="text-center mt-4">
-              <Link
-                to="/login"
-                className="text-sm transition"
-                style={{ color: COLORS.navy.primary }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.navy.hover)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.navy.primary)}
-              >
-                이미 계정이 있으신가요? 로그인하기
-              </Link>
-            </div>
           </form>
         )}
 

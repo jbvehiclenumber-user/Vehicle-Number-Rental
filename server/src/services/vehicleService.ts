@@ -54,8 +54,8 @@ export class VehicleService {
   /**
    * 차량 상세 조회
    */
-  async getVehicle(id: string) {
-    const vehicle = await vehicleRepository.findById(id, true);
+  async getVehicle(id: string, includeContact = false) {
+    const vehicle = await vehicleRepository.findById(id, true, includeContact);
     if (!vehicle) {
       throw new Error("차량을 찾을 수 없습니다.");
     }

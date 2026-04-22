@@ -17,7 +17,11 @@ export class VehicleRepository {
   /**
    * ID로 차량 조회
    */
-  async findById(id: string, includeCompany = false): Promise<Vehicle | null> {
+  async findById(
+    id: string,
+    includeCompany = false,
+    includeContact = false
+  ): Promise<Vehicle | null> {
     return prisma.vehicle.findUnique({
       where: { id },
       include: includeCompany
@@ -25,8 +29,12 @@ export class VehicleRepository {
             company: {
               select: {
                 companyName: true,
-                phone: true,
-                contactPhone: true,
+                ...(includeContact
+                  ? {
+                      phone: true,
+                      contactPhone: true,
+                    }
+                  : {}),
               },
             },
           }

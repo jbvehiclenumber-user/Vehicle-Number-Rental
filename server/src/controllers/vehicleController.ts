@@ -46,7 +46,8 @@ export const getVehicles = async (req: Request, res: Response) => {
 export const getVehicle = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const vehicle = await vehicleService.getVehicle(id);
+    const includeContact = !!req.user;
+    const vehicle = await vehicleService.getVehicle(id, includeContact);
     res.json(vehicle);
   } catch (error) {
     logger.error("Get vehicle error", error instanceof Error ? error : new Error(String(error)));

@@ -489,6 +489,7 @@ export class AuthService {
     const frontendUrl = process.env.FRONTEND_URL?.split(",")[0] || "http://localhost:3000";
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     const isDevEnv = process.env.NODE_ENV !== "production";
+    let emailSent = false;
     
     // 이메일 전송 시도
     try {
@@ -500,16 +501,22 @@ export class AuthService {
           resetToken,
           userName: user.name,
         });
+        emailSent = true;
         logger.info(`Password reset email sent to user: ${user.id}, email: ${user.email}`);
       } else {
         logger.warn("Email service not configured. RESEND_API_KEY not set.");
+        if (!isDevEnv) {
+          throw new Error("이메일 서비스가 설정되지 않았습니다.");
+        }
       }
     } catch (error) {
-      // 이메일 전송 실패해도 토큰은 반환 (개발 환경 대비)
       logger.error("Failed to send password reset email, but token generated", error instanceof Error ? error : new Error(String(error)), {
         user_id: user.id,
         email: user.email,
       });
+      if (!isDevEnv) {
+        throw new Error("이메일 전송에 실패했습니다.");
+      }
     }
     
     logger.info(`Password reset token generated for user: ${user.id}, email: ${user.email}`);
@@ -518,6 +525,7 @@ export class AuthService {
     if (isDevEnv) {
       return {
         message: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
+        emailSent,
         token: resetToken,
         resetUrl,
       };
@@ -525,6 +533,7 @@ export class AuthService {
 
     return {
       message: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
+      emailSent,
     };
   }
 

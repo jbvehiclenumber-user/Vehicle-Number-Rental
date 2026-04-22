@@ -4,7 +4,13 @@ exports.sendPasswordResetEmail = sendPasswordResetEmail;
 exports.isEmailServiceAvailable = isEmailServiceAvailable;
 const resend_1 = require("resend");
 const logger_1 = require("../utils/logger");
-const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
+function getResendClient() {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey?.trim()) {
+        throw new Error("RESEND_API_KEY is not set");
+    }
+    return new resend_1.Resend(apiKey);
+}
 /**
  * 비밀번호 재설정 이메일 전송
  */
@@ -12,7 +18,8 @@ async function sendPasswordResetEmail({ email, resetToken, userName, }) {
     try {
         const frontendUrl = process.env.FRONTEND_URL?.split(",")[0] || "http://localhost:3000";
         const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
-        const fromEmail = process.env.EMAIL_FROM || "noreply@example.com";
+        // Resend 개발 환경 기본 발신자: onboarding@resend.dev
+        const fromEmail = process.env.EMAIL_FROM?.trim() || "onboarding@resend.dev";
         const appName = process.env.APP_NAME || "넘버링크";
         const emailContent = `
 <!DOCTYPE html>
@@ -58,6 +65,7 @@ async function sendPasswordResetEmail({ email, resetToken, userName, }) {
 </body>
 </html>
     `.trim();
+        const resend = getResendClient();
         const { data, error } = await resend.emails.send({
             from: fromEmail,
             to: email,

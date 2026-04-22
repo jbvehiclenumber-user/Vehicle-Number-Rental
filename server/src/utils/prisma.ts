@@ -1,5 +1,7 @@
 // src/utils/prisma.ts
-import { PrismaClient } from "@prisma/client";
+// NOTE: In some setups, `@prisma/client` can resolve to a stub that requires
+// `#main-entry-point` and crashes under CommonJS. Import the generated client directly.
+import { PrismaClient } from "../../node_modules/.prisma/client";
 
 // PrismaClient를 singleton으로 관리
 const globalForPrisma = globalThis as unknown as {
