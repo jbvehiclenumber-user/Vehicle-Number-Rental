@@ -1,13 +1,11 @@
 // src/pages/HomePage.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../stores/authStore";
 import Header from "../components/Header";
 import { COLORS } from "../constants/colors";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, userType } = useAuthStore();
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
